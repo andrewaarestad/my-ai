@@ -1,0 +1,13 @@
+{
+  "name": "@my-ai/typescript-config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript configuration for My AI monorepo",
+  "main": "index.js",
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "react-library.json",
+    "node.json"
+  ]
+}
