@@ -13,7 +13,9 @@
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "next": "^16.0.3",
+    "next-auth": "5.0.0-beta.30",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
