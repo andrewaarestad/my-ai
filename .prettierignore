@@ -1,0 +1,21 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+build
+.next
+out
+.turbo
+
+# Misc
+.DS_Store
+*.pem
+
+# Coverage
+coverage
+
+# Lock files
+pnpm-lock.yaml
