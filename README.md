@@ -103,6 +103,22 @@ The platform uses Google OAuth for authentication. To set it up:
 
 For detailed instructions, see [docs/GOOGLE_OAUTH_SETUP.md](./docs/GOOGLE_OAUTH_SETUP.md).
 
+### Database Management
+
+```bash
+# Generate Prisma client (required after schema changes)
+pnpm db:generate
+
+# Push schema changes to database (development)
+pnpm db:push
+
+# Create and run migrations (production)
+pnpm db:migrate
+
+# Open Prisma Studio (database GUI)
+pnpm db:studio
+```
+
 ### Building
 
 ```bash
@@ -153,6 +169,10 @@ pnpm type-check
 | `pnpm format` | Format code with Prettier |
 | `pnpm clean` | Clean all build artifacts |
 | `pnpm pr-check` | Run all PR checks locally |
+| `pnpm db:generate` | Generate Prisma client |
+| `pnpm db:push` | Push schema to database (dev) |
+| `pnpm db:migrate` | Create and run migrations |
+| `pnpm db:studio` | Open Prisma Studio GUI |
 
 ## Packages
 

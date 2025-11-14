@@ -13,13 +13,23 @@ declare module "next-auth" {
 }
 
 // Global PrismaClient instance to avoid creating multiple connections
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+const globalForPrisma = globalThis as {
+  prisma?: PrismaClient;
 };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+export const prisma: PrismaClient =
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  globalForPrisma.prisma ??
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  globalForPrisma.prisma = prisma;
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -52,23 +62,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     // Add user ID to session
-    async session({ session, user }) {
+    session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
       }
       return session;
     },
     // Control who can sign in
-    async signIn({ user, account, profile }) {
+    signIn() {
       // You can add custom logic here to restrict who can sign in
       // For example, check if email domain is allowed
       return true;
     },
   },
   events: {
-    async createUser({ user }) {
+    createUser({ user }) {
       // This event fires when a new user signs in for the first time
-      console.log(`New user created: ${user.email}`);
+      // You can add logging or other side effects here
+      if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line no-console
+        console.log(`New user created: ${user.email ?? "unknown"}`);
+      }
     },
   },
   debug: process.env.NODE_ENV === "development",
