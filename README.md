@@ -134,6 +134,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines and workflow
 
 Agent-agnostic development instructions are available in [`.claude/instructions/`](./.claude/instructions/):
 
+- **[spec-alignment.md](./.claude/instructions/spec-alignment.md)**: Project specification alignment and compliance
 - **[development.md](./.claude/instructions/development.md)**: Understanding the monorepo structure
 - **[building.md](./.claude/instructions/building.md)**: Building packages
 - **[testing.md](./.claude/instructions/testing.md)**: Running tests
