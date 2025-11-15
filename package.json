@@ -20,20 +20,21 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mdx,css,yml,yaml}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "pr-check": "turbo run lint type-check test build",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "postinstall": "prisma generate || echo 'Skipping Prisma generation (DATABASE_URL not set)'"
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "devDependencies": {
+    "drizzle-kit": "^0.30.0",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
-    "prisma": "^6.19.0",
     "turbo": "^2.3.3",
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.0"
+    "@paralleldrive/cuid2": "^2.2.2",
+    "drizzle-orm": "^0.37.0",
+    "postgres": "^3.4.5"
   }
 }

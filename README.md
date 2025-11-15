@@ -12,7 +12,7 @@ My AI is a monorepo-based platform that provides a web interface for managing AI
 - **Frontend**: Next.js 16 with App Router, React 19, Tailwind CSS
 - **Language**: TypeScript (strict mode)
 - **Authentication**: NextAuth.js v5 (Auth.js) with Google OAuth
-- **Database**: Prisma ORM with PostgreSQL (Vercel Postgres/Supabase)
+- **Database**: Drizzle ORM with PostgreSQL (Vercel Postgres/Supabase)
 - **Testing**: Vitest + React Testing Library
 - **Build Tools**: Turbopack (Next.js), tsup (libraries)
 - **CI/CD**: GitHub Actions
@@ -29,7 +29,7 @@ my-ai/
 │   ├── typescript-config/# Shared TypeScript configuration
 │   └── ui/               # Shared React component library
 ├── services/             # Backend services (coming soon)
-├── prisma/               # Database schema and migrations
+├── db/                   # Drizzle ORM schema and migrations
 ├── docs/                 # Documentation
 ├── .claude/
 │   ├── commands/         # Custom Claude Code commands
@@ -87,13 +87,10 @@ The platform uses Google OAuth for authentication. To set it up:
    # Edit apps/web/.env with your credentials
    ```
 
-4. **Run database migrations**:
+4. **Push database schema**:
    ```bash
-   # Generate Prisma client
-   pnpm prisma generate
-
    # Push schema to database
-   pnpm prisma db push
+   pnpm db:push
    ```
 
 5. **Start the development server**:
@@ -106,16 +103,16 @@ For detailed instructions, see [docs/GOOGLE_OAUTH_SETUP.md](./docs/GOOGLE_OAUTH_
 ### Database Management
 
 ```bash
-# Generate Prisma client (required after schema changes)
+# Generate Drizzle migrations (required after schema changes)
 pnpm db:generate
 
 # Push schema changes to database (development)
 pnpm db:push
 
-# Create and run migrations (production)
+# Run migrations (production)
 pnpm db:migrate
 
-# Open Prisma Studio (database GUI)
+# Open Drizzle Studio (database GUI)
 pnpm db:studio
 ```
 
@@ -169,10 +166,10 @@ pnpm type-check
 | `pnpm format` | Format code with Prettier |
 | `pnpm clean` | Clean all build artifacts |
 | `pnpm pr-check` | Run all PR checks locally |
-| `pnpm db:generate` | Generate Prisma client |
+| `pnpm db:generate` | Generate Drizzle migrations |
 | `pnpm db:push` | Push schema to database (dev) |
-| `pnpm db:migrate` | Create and run migrations |
-| `pnpm db:studio` | Open Prisma Studio GUI |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:studio` | Open Drizzle Studio GUI |
 
 ## Packages
 

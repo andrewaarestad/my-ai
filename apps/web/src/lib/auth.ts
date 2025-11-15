@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { db } from "@db";
 
 // Extend the built-in session type
 declare module "next-auth" {
@@ -9,17 +11,11 @@ declare module "next-auth" {
       id: string;
     } & DefaultSession["user"];
   }
-
-  interface JWT {
-    id?: string;
-    accessToken?: string;
-    refreshToken?: string;
-  }
 }
 
-// Configure NextAuth.js with JWT strategy (compatible with Edge runtime)
-// Database adapter is added in the API route handler
+// Configure NextAuth.js with Drizzle adapter
 const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: DrizzleAdapter(db),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -47,26 +43,11 @@ const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
-  // Use JWT strategy for Edge runtime compatibility
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
-    // Add user ID to JWT token
-    jwt({ token, user, account }) {
-      if (user) {
-        token.id = user.id;
-      }
-      if (account) {
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
-      }
-      return token;
-    },
-    // Add user ID to session from JWT
-    session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
+    // Add user ID to session
+    session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
       }
       return session;
     },
