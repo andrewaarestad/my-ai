@@ -63,17 +63,8 @@ jobs:
           export DATABASE_URL="postgresql://user:password@localhost:5432/test"
           pnpm prisma generate
 
-      - name: Lint
-        run: pnpm turbo run lint
-
-      - name: Type check
-        run: pnpm turbo run type-check
-
-      - name: Test
-        run: pnpm turbo run test
-
-      - name: Build
-        run: pnpm turbo run build
+      - name: Run PR Checks
+        run: pnpm pr-check
 
       - name: PR Checks Summary
         if: always()

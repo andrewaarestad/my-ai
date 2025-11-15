@@ -33,6 +33,10 @@
     },
     "clean": {
       "cache": false
+    },
+    "pr-check": {
+      "dependsOn": ["lint", "type-check", "test", "build"],
+      "outputs": []
     }
   }
 }
