@@ -1,6 +1,15 @@
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+
+import { db } from "@/lib/db";
+import {
+  accounts,
+  sessions,
+  users,
+  verificationTokens,
+} from "@/db/schema";
 
 // Extend the built-in session type
 declare module "next-auth" {
@@ -17,9 +26,16 @@ declare module "next-auth" {
   }
 }
 
-// Configure NextAuth.js with JWT strategy (compatible with Edge runtime)
-// Database adapter is added in the API route handler
+const adapter = DrizzleAdapter(db, {
+  usersTable: users,
+  accountsTable: accounts,
+  sessionsTable: sessions,
+  verificationTokensTable: verificationTokens,
+});
+
+// Configure NextAuth.js with JWT strategy (requires Node runtime for pg)
 const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,

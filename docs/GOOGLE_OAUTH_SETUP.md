@@ -113,19 +113,19 @@ You need to set up a PostgreSQL database before you can use authentication. You 
 
 ## Step 7: Run Database Migrations
 
-1. Generate the Prisma client:
+1. Generate SQL from the Drizzle schema:
    ```bash
-   pnpm prisma generate
+   pnpm db:generate
    ```
 
-2. Push the database schema:
+2. Push the schema (ideal for local/dev):
    ```bash
-   pnpm prisma db push
+   pnpm db:push
    ```
 
-   Or create a migration:
+   Or apply committed migrations:
    ```bash
-   pnpm prisma migrate dev --name init
+   pnpm db:migrate
    ```
 
 ## Step 8: Test the Integration
@@ -174,8 +174,8 @@ This happens when your app requests sensitive or restricted scopes but hasn't be
 
 **Solution**:
 1. Make sure your database is running and accessible
-2. Check that the `DATABASE_URL` and `DIRECT_URL` are correct
-3. Make sure you've run `pnpm prisma generate` and `pnpm prisma db push`
+2. Check that the `DATABASE_URL` (and optional `DIRECT_URL`) are correct
+3. Make sure you've run `pnpm db:generate` and `pnpm db:push`
 
 ## Security Best Practices
 
@@ -196,5 +196,5 @@ This happens when your app requests sensitive or restricted scopes but hasn't be
 
 - [NextAuth.js Documentation](https://authjs.dev/)
 - [Google OAuth 2.0 Documentation](https://developers.google.com/identity/protocols/oauth2)
-- [Prisma Documentation](https://www.prisma.io/docs)
+- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
 - [Google Cloud Console](https://console.cloud.google.com/)

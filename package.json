@@ -20,14 +20,14 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mdx,css,yml,yaml}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "pr-check": "turbo run lint type-check test build",
-    "db:generate": "drizzle-kit generate:pg",
-    "db:push": "drizzle-kit push:pg",
-    "db:migrate": "drizzle-kit up",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "postinstall": "echo 'No database artifacts to generate during postinstall'"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.25.0",
+    "drizzle-kit": "^0.31.7",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "turbo": "^2.3.3",

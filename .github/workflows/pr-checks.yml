@@ -57,10 +57,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Generate Prisma Client
-        env:
-          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
-        run: pnpm prisma generate
+        - name: Validate Drizzle Schema
+          env:
+            DATABASE_URL: "postgresql://user:password@localhost:5432/test"
+          run: pnpm db:generate
 
       - name: Run PR Checks
         env:

@@ -1,68 +1,41 @@
 # Development Notes
 
-## Important: Prisma Client Generation
+## Database + Auth overview
 
-The PR checks will fail for type-checking and building until you generate the Prisma client. This is expected behavior and is **not a bug**.
+- The project now uses **Drizzle ORM** with the schema defined in `apps/web/src/db/schema.ts`.
+- Database access happens through a shared singleton in `apps/web/src/lib/db.ts`. This file throws early if `DATABASE_URL` is missing, so make sure it is set before running any commands that touch the API routes or NextAuth.
+- SQL migrations live in the `drizzle/` directory. `drizzle/meta/_journal.json` keeps track of which migrations have been applied.
 
-### Why Type Checks Fail in CI
+## Workflow summary
 
-The type check errors you see are:
-```
-src/lib/auth.ts(2,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
-```
+1. **Modify the schema** inside `apps/web/src/db/schema.ts`.
+2. **Generate SQL** via `pnpm db:generate`. This snapshots the current schema into `drizzle/NNNN_name.sql`.
+3. **Apply schema to dev DB** with `pnpm db:push` (safe for disposable preview databases).
+4. **Apply migrations in CI/production** with `pnpm db:migrate`.
 
-This happens because:
-1. Prisma client is generated based on your `prisma/schema.prisma`
-2. The client is generated **after** you connect to a database
-3. The generated client is not committed to git (it's in `.gitignore`)
+All commands read configuration from `drizzle.config.ts`, so you do not need to pass additional flags.
 
-### How to Fix This Locally
+## CI/CD expectations
 
-Before running tests or type checks, you need to:
+- The GitHub workflow exports a `DATABASE_URL` before running `pnpm pr-check`. Use any disposable Postgres URL when running locally if you just need types to compile.
+- `pnpm db:generate` is deterministic; the CI job will fail if the generated SQL differs from what is committed.
+- Because we use the Drizzle adapter for NextAuth, the API route must run with the Node.js runtime (see `apps/web/src/app/api/auth/[...nextauth]/route.ts`).
 
-1. **Set up your database** (see [docs/SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md))
-2. **Generate the Prisma client**:
-   ```bash
-   pnpm prisma generate
-   ```
-3. **Then run your checks**:
-   ```bash
-   pnpm pr-check
-   ```
+## Troubleshooting
 
-### CI/CD Setup
+| Symptom | Fix |
+| --- | --- |
+| `DATABASE_URL is not defined` error on boot | Provide the env var in both root `.env` and `apps/web/.env`, or export it inline when running commands. |
+| Drift between schema and migrations | Run `pnpm db:generate` again after your schema edits and commit the resulting `drizzle/` files. |
+| Need a quick view of records | Run `pnpm db:studio` to open Drizzle Studio locally (requires `DATABASE_URL`). |
+| OAuth sign-in fails after schema change | Make sure you applied the migration to the target database (`pnpm db:push` for dev or `pnpm db:migrate` elsewhere). |
 
-For CI/CD to pass, you'll need to either:
+If you ever need to reset everything locally:
 
-**Option A: Mock Database (Quick Fix)**
-- Add a `postinstall` script to generate Prisma client
-- Use a mock/test database URL in CI
-
-**Option B: Real Database (Production Approach)**
-- Set up a test database (e.g., Vercel Postgres preview database)
-- Add `DATABASE_URL` to your CI environment variables
-- Run `pnpm prisma generate` in your CI pipeline before tests
-
-### Recommended CI Configuration
-
-Add this to your GitHub Actions workflow (`.github/workflows/pr-checks.yml`):
-
-```yaml
-- name: Generate Prisma Client
-  run: |
-    # Use a mock database URL for type checking
-    export DATABASE_URL="postgresql://user:password@localhost:5432/test"
-    pnpm prisma generate
-
-- name: Run PR Checks
-  run: pnpm pr-check
+```bash
+rm -rf drizzle
+pnpm db:generate
+pnpm db:push
 ```
 
-### Current Status
-
-- ✅ **Linting**: Passing
-- ✅ **Testing**: Passing (for @my-ai/ui package)
-- ❌ **Type Checking**: Will pass after `pnpm prisma generate`
-- ❌ **Building**: Will pass after `pnpm prisma generate`
-
-Once you set up your database and generate the Prisma client locally, all checks will pass.
+This will regenerate a clean migration history that matches the current schema.
