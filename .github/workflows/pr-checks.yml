@@ -58,12 +58,13 @@ jobs:
             ${{ runner.os }}-turbo-
 
       - name: Generate Prisma Client
-        run: |
-          # Use a mock database URL for type checking in CI
-          export DATABASE_URL="postgresql://user:password@localhost:5432/test"
-          pnpm prisma generate
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
+        run: pnpm prisma generate
 
       - name: Run PR Checks
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
         run: pnpm pr-check
 
       - name: PR Checks Summary
