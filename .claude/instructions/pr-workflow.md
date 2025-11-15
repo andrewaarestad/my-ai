@@ -1,5 +1,75 @@
 # PR Workflow for My AI Monorepo
 
+## 🚨 CRITICAL: Always Run Full PR Checks Before Pushing 🚨
+
+**FOR AGENTS/AUTOMATED WORKFLOWS:**
+
+Before **EVERY** `git push`, you **MUST** run the complete PR check suite:
+
+```bash
+pnpm pr-check
+```
+
+**NO EXCEPTIONS.** This is non-negotiable.
+
+### Why This Is Critical
+
+- Individual checks (lint, type-check, test) may pass, but the build can still fail
+- Build failures often reveal missing dependencies or import errors
+- Each failed push wastes CI time and creates noise in the PR
+- Running individual checks != running the full suite
+- The CI environment may have different conditions than local
+
+### The Correct Workflow for Agents
+
+```bash
+# 1. Make your changes
+# ... edit files ...
+
+# 2. Run individual checks to iterate quickly (OPTIONAL)
+pnpm lint        # Quick check for lint errors
+pnpm type-check  # Quick check for type errors
+
+# 3. Fix issues found
+# ... fix errors ...
+
+# 4. ALWAYS run the FULL pr-check suite before committing
+pnpm pr-check
+
+# 5. Only if ALL checks pass, commit and push
+git add -A
+git commit -m "your message"
+git push
+```
+
+### What `pnpm pr-check` Does
+
+This command runs **the exact same checks** that GitHub Actions CI runs:
+
+1. ✅ **Lint** all packages (`turbo run lint`)
+2. ✅ **Type check** all packages (`turbo run type-check`)
+3. ✅ **Test** all packages (`turbo run test`)
+4. ✅ **Build** all packages (`turbo run build`)
+
+If ANY of these fail, **DO NOT PUSH**.
+
+### Failed PR Check? Debug Systematically
+
+If `pnpm pr-check` fails, run checks individually to identify the issue:
+
+```bash
+# Find which check is failing
+pnpm lint        # Check for lint errors
+pnpm type-check  # Check for type errors
+pnpm test        # Check for test failures
+pnpm build       # Check for build errors
+
+# Fix the errors, then run the FULL suite again
+pnpm pr-check
+```
+
+**Never push until `pnpm pr-check` completes successfully with exit code 0.**
+
 ## Pre-PR Checklist
 
 Before opening a pull request, ensure all checks pass locally.
@@ -78,19 +148,30 @@ pnpm type-check
 pnpm test
 ```
 
-### 4. Before Opening PR
+### 4. Before Committing & Pushing (CRITICAL)
 
 ```bash
-# Run full PR check suite
+# MANDATORY: Run full PR check suite
 pnpm pr-check
 ```
 
-**If all checks pass**, you're ready to push and open a PR!
+**STOP!** Check the output:
+- ✅ If exit code is 0 and all checks pass → Proceed to commit and push
+- ❌ If ANY check fails → DO NOT commit or push, fix the errors first
 
 ```bash
-# Push to your branch
+# Only if pnpm pr-check passed with exit code 0:
+git add -A
+git commit -m "your commit message"
 git push -u origin feature/your-feature-name
 ```
+
+**For Agents:** You must verify that `pnpm pr-check` completed successfully before executing `git push`. Check for:
+1. Exit code 0
+2. All tasks showing as successful in Turborepo output
+3. No error messages in the output
+
+**Never push without running the full pr-check suite first!**
 
 ## Common PR Failures and Fixes
 
@@ -184,20 +265,43 @@ This makes subsequent runs much faster!
 
 ### ✅ DO
 
-1. **Run `pnpm pr-check` before opening PR**
-2. **Use `lint:fix` to auto-fix issues**
-3. **Keep PRs focused and small**
-4. **Write descriptive commit messages**
-5. **Add tests for new features**
-6. **Update documentation if needed**
+1. **🚨 ALWAYS run `pnpm pr-check` before EVERY push** (most important!)
+2. **Verify exit code is 0 before pushing**
+3. **Run individual checks to iterate quickly during development**
+4. **Run the full suite before committing**
+5. **Use `lint:fix` to auto-fix issues**
+6. **Keep PRs focused and small**
+7. **Write descriptive commit messages**
+8. **Add tests for new features**
+9. **Update documentation if needed**
 
 ### ❌ DON'T
 
-1. **Don't skip the pr-check command**
-2. **Don't regenerate files for lint issues** - Use `lint:fix` instead!
-3. **Don't commit without running checks**
-4. **Don't push directly to main**
-5. **Don't mix unrelated changes in one PR**
+1. **🚨 DON'T push without running `pnpm pr-check` first** (most important!)
+2. **DON'T assume individual checks passing = full suite passing**
+3. **DON'T skip the build step - it catches missing dependencies**
+4. **DON'T regenerate files for lint issues** - Use `lint:fix` instead!
+5. **DON'T commit without running checks**
+6. **DON'T push directly to main**
+7. **DON'T mix unrelated changes in one PR**
+8. **DON'T ignore build warnings - they may become errors in CI**
+
+### 🤖 Special Instructions for AI Agents
+
+When working on this codebase, you **MUST**:
+
+1. Run `pnpm pr-check` before **EVERY** `git push`
+2. Check the exit code - only push if it's 0
+3. If any check fails, debug it systematically:
+   - Run individual checks to identify the failure
+   - Fix the issue
+   - Run `pnpm pr-check` again
+   - Repeat until all checks pass
+4. Never assume "lint passed = everything is fine"
+5. The **build** step is critical - it catches import errors, missing deps, etc.
+6. Read error messages carefully - they usually tell you exactly what's wrong
+
+**Remember:** Each failed push creates work for others and wastes CI resources. Getting it right the first time is worth the extra minute to run `pnpm pr-check`.
 
 ## Commit Message Guidelines
 
@@ -269,12 +373,39 @@ If PR checks are failing and you're stuck:
 
 ## Summary
 
-**The golden rule**: Always run `pnpm pr-check` before opening a PR!
+**The golden rule**: Always run `pnpm pr-check` before **EVERY** `git push`!
 
-This ensures:
+### Why This Matters
+
+Running the full suite (`pnpm pr-check`) ensures:
 - ✅ Code is properly linted and formatted
-- ✅ No type errors
+- ✅ No type errors across all packages
 - ✅ All tests pass
-- ✅ Everything builds successfully
+- ✅ Everything builds successfully (catches missing deps, import errors)
+- ✅ You match exactly what CI will run
+- ✅ No wasted CI time from preventable failures
+
+### The Complete Pre-Push Checklist
+
+```bash
+# 1. Make your changes
+# ... edit files ...
+
+# 2. (Optional) Quick iteration with individual checks
+pnpm lint        # Fast feedback on lint errors
+pnpm type-check  # Fast feedback on type errors
+
+# 3. MANDATORY: Run the full suite
+pnpm pr-check
+
+# 4. Verify success (exit code 0, all tasks successful)
+
+# 5. ONLY THEN commit and push
+git add -A
+git commit -m "feat: your commit message"
+git push
+```
+
+**For AI Agents:** This is not optional. Every push must be preceded by a successful `pnpm pr-check` run. No exceptions.
 
 Happy coding! 🚀
