@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
+import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
 
 // Extend the built-in session type
@@ -31,7 +32,8 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-const authConfig = NextAuth({
+// Configure NextAuth.js
+const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     Google({
@@ -88,4 +90,5 @@ const authConfig = NextAuth({
   debug: process.env.NODE_ENV === "development",
 });
 
-export const { handlers, auth, signIn, signOut } = authConfig;
+// Export individual functions to avoid TS2742 error with declaration generation
+export { handlers, auth, signIn, signOut };

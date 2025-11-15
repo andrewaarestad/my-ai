@@ -6,7 +6,11 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    // Disable declaration generation for the web app (not a library)
+    // This fixes TS2742 errors with NextAuth.js v5 exports
+    "declaration": false,
+    "declarationMap": false
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
