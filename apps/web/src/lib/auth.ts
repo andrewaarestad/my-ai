@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+import { logAuthError, logInfo } from "./error-logger";
+import { isDevelopment } from "./env";
 
 // Extend the built-in session type
 declare module "next-auth" {
@@ -46,6 +48,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   pages: {
     signIn: "/auth/signin",
+    error: "/auth/error",
   },
   // Use JWT strategy for Edge runtime compatibility
   session: {
@@ -69,6 +72,26 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user, account, profile }) {
+      // Log successful sign-ins in development/preview for debugging
+      if (isDevelopment()) {
+        await logInfo("User signed in successfully", {
+          userId: user.id,
+          email: user.email || undefined,
+          provider: account?.provider,
+        });
+      }
+    },
+    async signOut({ token }) {
+      // Log sign-outs in development for debugging
+      if (isDevelopment()) {
+        await logInfo("User signed out", {
+          userId: token?.id as string | undefined,
+        });
+      }
     },
   },
   debug: process.env.NODE_ENV === "development",

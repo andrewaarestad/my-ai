@@ -1,15 +1,30 @@
 import { signIn } from "@/lib/auth";
+import { AuthError } from "@/components/auth/AuthError";
+import { parseAuthError } from "@/types/auth-errors";
 
-export default function SignIn() {
+interface SignInPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function SignIn({ searchParams }: SignInPageProps) {
+  const params = await searchParams;
+  const error = parseAuthError(params);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white/10 p-8 shadow-xl backdrop-blur-sm">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white">My AI</h1>
           <p className="mt-2 text-gray-300">Sign in to your account</p>
         </div>
 
-        <div className="mt-8">
+        {error && (
+          <div className="mt-6">
+            <AuthError error={error} />
+          </div>
+        )}
+
+        <div className={error ? "mt-6" : "mt-8"}>
           <form
             action={async () => {
               "use server";
