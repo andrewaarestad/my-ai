@@ -31,7 +31,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const authConfig = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     Google({
@@ -87,3 +87,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   debug: process.env.NODE_ENV === "development",
 });
+
+export const { handlers, auth, signIn, signOut } = authConfig;
