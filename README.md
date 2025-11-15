@@ -11,6 +11,8 @@ My AI is a monorepo-based platform that provides a web interface for managing AI
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Frontend**: Next.js 16 with App Router, React 19, Tailwind CSS
 - **Language**: TypeScript (strict mode)
+- **Authentication**: NextAuth.js v5 (Auth.js) with Google OAuth
+- **Database**: Prisma ORM with PostgreSQL (Vercel Postgres/Supabase)
 - **Testing**: Vitest + React Testing Library
 - **Build Tools**: Turbopack (Next.js), tsup (libraries)
 - **CI/CD**: GitHub Actions
@@ -27,6 +29,8 @@ my-ai/
 │   ├── typescript-config/# Shared TypeScript configuration
 │   └── ui/               # Shared React component library
 ├── services/             # Backend services (coming soon)
+├── prisma/               # Database schema and migrations
+├── docs/                 # Documentation
 ├── .claude/
 │   ├── commands/         # Custom Claude Code commands
 │   └── instructions/     # Agent development guides
@@ -62,6 +66,58 @@ pnpm --filter @my-ai/web dev
 ```
 
 The web app will be available at [http://localhost:3000](http://localhost:3000).
+
+### Authentication Setup
+
+The platform uses Google OAuth for authentication. To set it up:
+
+1. **Set up a PostgreSQL database**:
+   - Option A: [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) (recommended)
+   - Option B: [Supabase](https://supabase.com/)
+
+2. **Configure Google OAuth**:
+   - Follow the [Google OAuth Setup Guide](./docs/GOOGLE_OAUTH_SETUP.md)
+   - Get your credentials from [Google Cloud Console](https://console.cloud.google.com/)
+
+3. **Set up environment variables**:
+   ```bash
+   # Copy the example file
+   cp apps/web/.env.example apps/web/.env
+
+   # Edit apps/web/.env with your credentials
+   ```
+
+4. **Run database migrations**:
+   ```bash
+   # Generate Prisma client
+   pnpm prisma generate
+
+   # Push schema to database
+   pnpm prisma db push
+   ```
+
+5. **Start the development server**:
+   ```bash
+   pnpm dev
+   ```
+
+For detailed instructions, see [docs/GOOGLE_OAUTH_SETUP.md](./docs/GOOGLE_OAUTH_SETUP.md).
+
+### Database Management
+
+```bash
+# Generate Prisma client (required after schema changes)
+pnpm db:generate
+
+# Push schema changes to database (development)
+pnpm db:push
+
+# Create and run migrations (production)
+pnpm db:migrate
+
+# Open Prisma Studio (database GUI)
+pnpm db:studio
+```
 
 ### Building
 
@@ -113,6 +169,10 @@ pnpm type-check
 | `pnpm format` | Format code with Prettier |
 | `pnpm clean` | Clean all build artifacts |
 | `pnpm pr-check` | Run all PR checks locally |
+| `pnpm db:generate` | Generate Prisma client |
+| `pnpm db:push` | Push schema to database (dev) |
+| `pnpm db:migrate` | Create and run migrations |
+| `pnpm db:studio` | Open Prisma Studio GUI |
 
 ## Packages
 

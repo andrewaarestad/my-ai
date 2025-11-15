@@ -47,7 +47,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Setup Turborepo cache
         uses: actions/cache@v4
@@ -57,17 +57,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Lint
-        run: pnpm turbo run lint
+      - name: Generate Prisma Client
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
+        run: pnpm prisma generate
 
-      - name: Type check
-        run: pnpm turbo run type-check
-
-      - name: Test
-        run: pnpm turbo run test
-
-      - name: Build
-        run: pnpm turbo run build
+      - name: Run PR Checks
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
+        run: pnpm pr-check
 
       - name: PR Checks Summary
         if: always()
@@ -77,3 +75,8 @@ jobs:
           echo "- Type checking: ${{ job.status }}"
           echo "- Tests: ${{ job.status }}"
           echo "- Build: ${{ job.status }}"
+
+      - name: All Checks Passed
+        run: |
+          echo "✅ All PR checks passed successfully!"
+          echo "This step is used as a sentinel for GitHub branch protection rules."
