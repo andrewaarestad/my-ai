@@ -18,12 +18,12 @@ This guide will walk you through setting up Google OAuth for the My AI platform.
 ## Step 2: Enable Required APIs
 
 1. In the Google Cloud Console, navigate to "APIs & Services" > "Library"
-2. Search for and enable the following APIs:
-   - **Google+ API** (for user profile information)
-   - **Google Calendar API** (if you want to access calendar data)
-   - **Gmail API** (if you want to access email data)
-   - **Google Drive API** (if you want to access drive data)
+2. Search for and enable the following APIs (only if you need these features):
+   - **Google Calendar API** (for calendar data access)
+   - **Gmail API** (for email data access)
+   - **Google Drive API** (for drive data access)
 
+   > **Note:** For user profile information, you do not need to enable any specific API. The OAuth scopes (`openid`, `userinfo.email`, `userinfo.profile`) are sufficient.
 ## Step 3: Configure OAuth Consent Screen
 
 1. Navigate to "APIs & Services" > "OAuth consent screen"
