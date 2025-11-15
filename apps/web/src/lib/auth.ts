@@ -1,5 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
@@ -11,30 +9,17 @@ declare module "next-auth" {
       id: string;
     } & DefaultSession["user"];
   }
+
+  interface JWT {
+    id?: string;
+    accessToken?: string;
+    refreshToken?: string;
+  }
 }
 
-// Global PrismaClient instance to avoid creating multiple connections
-const globalForPrisma = globalThis as {
-  prisma?: PrismaClient;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-export const prisma: PrismaClient =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  globalForPrisma.prisma ??
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  globalForPrisma.prisma = prisma;
-}
-
-// Configure NextAuth.js
+// Configure NextAuth.js with JWT strategy (compatible with Edge runtime)
+// Database adapter is added in the API route handler
 const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -62,29 +47,28 @@ const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
+  // Use JWT strategy for Edge runtime compatibility
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    // Add user ID to session
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
+    // Add user ID to JWT token
+    jwt({ token, user, account }) {
+      if (user) {
+        token.id = user.id;
+      }
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+      }
+      return token;
+    },
+    // Add user ID to session from JWT
+    session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
       }
       return session;
-    },
-    // Control who can sign in
-    signIn() {
-      // You can add custom logic here to restrict who can sign in
-      // For example, check if email domain is allowed
-      return true;
-    },
-  },
-  events: {
-    createUser({ user }) {
-      // This event fires when a new user signs in for the first time
-      // You can add logging or other side effects here
-      if (process.env.NODE_ENV === "development") {
-        // eslint-disable-next-line no-console
-        console.log(`New user created: ${user.email ?? "unknown"}`);
-      }
     },
   },
   debug: process.env.NODE_ENV === "development",
