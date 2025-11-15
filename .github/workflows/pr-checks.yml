@@ -75,3 +75,8 @@ jobs:
           echo "- Type checking: ${{ job.status }}"
           echo "- Tests: ${{ job.status }}"
           echo "- Build: ${{ job.status }}"
+
+      - name: All Checks Passed
+        run: |
+          echo "✅ All PR checks passed successfully!"
+          echo "This step is used as a sentinel for GitHub branch protection rules."
