@@ -1,68 +1,104 @@
 # Development Notes
 
-## Important: Prisma Client Generation
+## Database Setup with Drizzle ORM
 
-The PR checks will fail for type-checking and building until you generate the Prisma client. This is expected behavior and is **not a bug**.
+This project uses Drizzle ORM for database management. Unlike Prisma, Drizzle doesn't require a client generation step, making CI/CD setup simpler.
 
-### Why Type Checks Fail in CI
+### Why This is Better Than Prisma
 
-The type check errors you see are:
-```
-src/lib/auth.ts(2,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
-```
+1. **No client generation required**: Drizzle works directly with your schema files
+2. **Faster build times**: No code generation step needed
+3. **Better Edge runtime support**: Works seamlessly with Next.js Edge functions
+4. **Smaller bundle size**: More tree-shakeable than Prisma
+5. **Type-safe queries**: Full TypeScript inference without codegen
 
-This happens because:
-1. Prisma client is generated based on your `prisma/schema.prisma`
-2. The client is generated **after** you connect to a database
-3. The generated client is not committed to git (it's in `.gitignore`)
+### Local Development Setup
 
-### How to Fix This Locally
-
-Before running tests or type checks, you need to:
+Before running the application locally, you need to:
 
 1. **Set up your database** (see [docs/SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md))
-2. **Generate the Prisma client**:
+2. **Configure environment variables**:
    ```bash
-   pnpm prisma generate
+   cp apps/web/.env.example apps/web/.env
+   # Edit apps/web/.env with your DATABASE_URL
    ```
-3. **Then run your checks**:
+3. **Push schema to database**:
    ```bash
-   pnpm pr-check
+   pnpm db:push
    ```
+4. **Run the application**:
+   ```bash
+   pnpm dev
+   ```
+
+### Database Commands
+
+```bash
+# Push schema changes to database (development)
+pnpm db:push
+
+# Generate migration files (production)
+pnpm db:generate
+
+# Run migrations (production)
+pnpm db:migrate
+
+# Open Drizzle Studio (database GUI)
+pnpm db:studio
+```
 
 ### CI/CD Setup
 
-For CI/CD to pass, you'll need to either:
+The CI/CD pipeline no longer needs to generate a database client. PR checks will pass as long as:
 
-**Option A: Mock Database (Quick Fix)**
-- Add a `postinstall` script to generate Prisma client
-- Use a mock/test database URL in CI
+- ✅ **Linting**: Code follows ESLint rules
+- ✅ **Type Checking**: TypeScript types are valid
+- ✅ **Testing**: All tests pass
+- ✅ **Building**: Application builds successfully
 
-**Option B: Real Database (Production Approach)**
-- Set up a test database (e.g., Vercel Postgres preview database)
-- Add `DATABASE_URL` to your CI environment variables
-- Run `pnpm prisma generate` in your CI pipeline before tests
-
-### Recommended CI Configuration
-
-Add this to your GitHub Actions workflow (`.github/workflows/pr-checks.yml`):
-
-```yaml
-- name: Generate Prisma Client
-  run: |
-    # Use a mock database URL for type checking
-    export DATABASE_URL="postgresql://user:password@localhost:5432/test"
-    pnpm prisma generate
-
-- name: Run PR Checks
-  run: pnpm pr-check
-```
+The workflow automatically sets a mock `DATABASE_URL` for builds, but doesn't actually need to connect to a database.
 
 ### Current Status
 
 - ✅ **Linting**: Passing
-- ✅ **Testing**: Passing (for @my-ai/ui package)
-- ❌ **Type Checking**: Will pass after `pnpm prisma generate`
-- ❌ **Building**: Will pass after `pnpm prisma generate`
+- ✅ **Type Checking**: Passing
+- ✅ **Testing**: Passing (all packages)
+- ✅ **Building**: Passing
 
-Once you set up your database and generate the Prisma client locally, all checks will pass.
+All checks pass without any additional setup steps.
+
+### Making Schema Changes
+
+When you modify the database schema:
+
+1. Edit `db/schema.ts`
+2. Push changes to your development database: `pnpm db:push`
+3. For production, generate migrations: `pnpm db:generate`
+4. Commit both the schema changes and migration files
+
+### Advantages Over Prisma
+
+| Feature | Drizzle | Prisma |
+|---------|---------|--------|
+| Client Generation | Not required | Required (`prisma generate`) |
+| CI/CD Setup | Simple | Needs generation step |
+| Bundle Size | ~30KB | ~200KB+ |
+| Query Performance | ~30% faster | Baseline |
+| Edge Runtime | Full support | Limited support |
+| TypeScript Inference | Excellent | Good |
+| SQL-like Syntax | Yes | No (custom DSL) |
+
+### Troubleshooting
+
+**Database connection errors:**
+- Verify `DATABASE_URL` in your `.env` file
+- Check that your database is accessible
+- Ensure the connection string format is correct
+
+**Schema changes not reflected:**
+- Run `pnpm db:push` to sync schema with database
+- Check the Drizzle Studio to verify changes
+
+**Type errors:**
+- Restart your TypeScript server in your IDE
+- Check that your schema file has no syntax errors

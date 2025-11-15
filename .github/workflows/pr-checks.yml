@@ -57,11 +57,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Generate Prisma Client
-        env:
-          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
-        run: pnpm prisma generate
-
       - name: Run PR Checks
         env:
           DATABASE_URL: "postgresql://user:password@localhost:5432/test"

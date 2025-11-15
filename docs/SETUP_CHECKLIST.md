@@ -98,23 +98,21 @@ openssl rand -base64 32
 # Copy the output and paste it as NEXTAUTH_SECRET in apps/web/.env
 ```
 
-### 6. Set Up Database Schema
+### 6. Push Database Schema
 
 ```bash
-# Generate Prisma client
-pnpm prisma generate
-
 # Push the schema to your database
-pnpm prisma db push
+pnpm db:push
 
-# Or create a migration (recommended for production)
-pnpm prisma migrate dev --name init
+# Or create migrations (recommended for production)
+pnpm db:generate  # Generate migration files
+pnpm db:migrate   # Run migrations
 ```
 
 ### 7. Verify Setup
 
 ```bash
-# Type check (should pass after Prisma client is generated)
+# Type check
 pnpm type-check
 
 # Lint
@@ -144,9 +142,9 @@ pnpm dev
 
 ## ✅ Common Issues & Solutions
 
-### Issue: "Module '@prisma/client' has no exported member 'PrismaClient'"
+### Issue: "Cannot find module '@db'"
 
-**Solution:** Run `pnpm prisma generate` to generate the Prisma client.
+**Solution:** Make sure the `@db` path alias is configured in `tsconfig.json` and points to the `../../db` directory.
 
 ### Issue: "redirect_uri_mismatch"
 
@@ -190,7 +188,7 @@ When deploying to production:
 
 - [Google OAuth Setup Guide](./GOOGLE_OAUTH_SETUP.md) - Detailed OAuth configuration
 - [NextAuth.js Documentation](https://authjs.dev/)
-- [Prisma Documentation](https://www.prisma.io/docs)
+- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
 - [Main README](../README.md) - Project overview and commands
 
 ## 🆘 Need Help?
@@ -199,5 +197,5 @@ If you encounter issues not covered here:
 
 1. Check the detailed [Google OAuth Setup Guide](./GOOGLE_OAUTH_SETUP.md)
 2. Review the [NextAuth.js documentation](https://authjs.dev/)
-3. Check Prisma logs: `pnpm prisma studio`
+3. Check database with Drizzle Studio: `pnpm db:studio`
 4. Open an issue on GitHub
