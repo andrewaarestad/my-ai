@@ -37,7 +37,7 @@ ${error.troubleshootingSteps.map((step, i) => `${i + 1}. ${step}`).join('\n')}
 ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
     `.trim();
 
-    navigator.clipboard.writeText(details);
+    void navigator.clipboard.writeText(details);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

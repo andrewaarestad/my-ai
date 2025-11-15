@@ -310,7 +310,7 @@ export function parseAuthError(
     errorCode = searchParams.get('error');
   } else if (typeof searchParams === 'object') {
     const error = searchParams.error;
-    errorCode = Array.isArray(error) ? error[0] : error || null;
+    errorCode = Array.isArray(error) ? (error[0] ?? null) : (error ?? null);
   }
 
   if (!errorCode) {

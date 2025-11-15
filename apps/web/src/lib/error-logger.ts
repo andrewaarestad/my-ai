@@ -23,7 +23,7 @@ export interface ErrorContext {
 export interface LogEntry {
   level: ErrorLevel;
   message: string;
-  error?: Error | unknown;
+  error?: unknown;
   context?: ErrorContext;
   environment: string;
   timestamp: string;
@@ -86,7 +86,7 @@ function formatError(error: unknown): string {
 function createLogEntry(
   level: ErrorLevel,
   message: string,
-  error?: Error | unknown,
+  error?: unknown,
   context?: ErrorContext
 ): LogEntry {
   const entry: LogEntry = {
@@ -110,6 +110,7 @@ function createLogEntry(
 /**
  * Log to console with appropriate formatting
  */
+/* eslint-disable no-console */
 function logToConsole(entry: LogEntry): void {
   const prefix = `[${entry.level.toUpperCase()}] [${entry.timestamp}]`;
 
@@ -138,6 +139,7 @@ function logToConsole(entry: LogEntry): void {
       break;
   }
 }
+/* eslint-enable no-console */
 
 /**
  * Log to external service (placeholder for future implementation)
@@ -149,7 +151,7 @@ function logToConsole(entry: LogEntry): void {
  * - CloudWatch
  * - etc.
  */
-async function logToExternalService(entry: LogEntry): Promise<void> {
+function logToExternalService(entry: LogEntry): void {
   // TODO: Implement external logging service integration
   // Example:
   // if (isProduction()) {
@@ -170,10 +172,11 @@ async function logToExternalService(entry: LogEntry): Promise<void> {
 /**
  * Main logging function
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 async function log(
   level: ErrorLevel,
   message: string,
-  error?: Error | unknown,
+  error?: unknown,
   context?: ErrorContext
 ): Promise<void> {
   const entry = createLogEntry(level, message, error, context);
@@ -185,7 +188,7 @@ async function log(
   }
 
   // In preview/production, log to external service
-  await logToExternalService(entry);
+  logToExternalService(entry);
 }
 
 /**
@@ -193,7 +196,7 @@ async function log(
  */
 export async function logError(
   message: string,
-  error?: Error | unknown,
+  error?: unknown,
   context?: ErrorContext
 ): Promise<void> {
   await log('error', message, error, context);

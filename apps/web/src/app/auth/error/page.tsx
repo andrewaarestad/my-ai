@@ -56,7 +56,9 @@ export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
         <AuthError
           error={displayError}
           technicalDetails={
-            params?.error ? `URL Error Parameter: ${params.error}` : undefined
+            params?.error
+              ? `URL Error Parameter: ${Array.isArray(params.error) ? params.error[0] : params.error}`
+              : undefined
           }
         />
       </div>

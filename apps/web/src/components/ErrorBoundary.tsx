@@ -42,8 +42,8 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: { componentStack?: string }): void {
-    // Log the error
-    logError('React Error Boundary caught an error', error, {
+    // Log the error (intentionally not awaited to avoid blocking)
+    void logError('React Error Boundary caught an error', error, {
       componentStack: errorInfo.componentStack,
       errorType: 'react_rendering',
     });

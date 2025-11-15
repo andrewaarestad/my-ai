@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
-import { logAuthError, logInfo } from "./error-logger";
+import { logInfo } from "./error-logger";
 import { isDevelopment } from "./env";
 
 // Extend the built-in session type
@@ -75,7 +75,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Log successful sign-ins in development/preview for debugging
       if (isDevelopment()) {
         await logInfo("User signed in successfully", {
@@ -85,12 +85,10 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         });
       }
     },
-    async signOut({ token }) {
+    async signOut() {
       // Log sign-outs in development for debugging
       if (isDevelopment()) {
-        await logInfo("User signed out", {
-          userId: token?.id as string | undefined,
-        });
+        await logInfo("User signed out");
       }
     },
   },
