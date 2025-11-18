@@ -35,15 +35,18 @@ export interface LogEntry {
 function sanitize(value: unknown): unknown {
   if (typeof value === 'string') {
     // Redact common sensitive patterns
-    return value
+    let sanitized = value
       .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [REDACTED]')
       .replace(/token[=:]\s*[A-Za-z0-9._-]+/gi, 'token=[REDACTED]')
       .replace(/api[_-]?key[=:]\s*[A-Za-z0-9._-]+/gi, 'api_key=[REDACTED]')
       .replace(/password[=:]\s*\S+/gi, 'password=[REDACTED]')
       .replace(/secret[=:]\s*\S+/gi, 'secret=[REDACTED]')
-      .replace(/client_secret[=:]\s*\S+/gi, 'client_secret=[REDACTED]')
-      // Redact email addresses in production only
-      .replace(isProduction() ? /[\w.-]+@[\w.-]+\.\w+/g : '', '[EMAIL]');
+      .replace(/client_secret[=:]\s*\S+/gi, 'client_secret=[REDACTED]');
+    // Redact email addresses in production only
+    if (isProduction()) {
+      sanitized = sanitized.replace(/[\w.-]+@[\w.-]+\.\w+/g, '[EMAIL]');
+    }
+    return sanitized;
   }
 
   if (typeof value === 'object' && value !== null) {
