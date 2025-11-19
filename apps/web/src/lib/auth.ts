@@ -1,6 +1,9 @@
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "./prisma";
+import { refreshUserTokens } from "./token-refresh";
 import { logInfo } from "./error-logger";
 import { isDevelopment } from "./env";
 
@@ -14,14 +17,15 @@ declare module "next-auth" {
 
   interface JWT {
     id?: string;
-    accessToken?: string;
-    refreshToken?: string;
+    lastTokenRefresh?: number; // Timestamp of last token refresh check
   }
 }
 
-// Configure NextAuth.js with JWT strategy (compatible with Edge runtime)
-// Database adapter is added in the API route handler
+// Configure NextAuth.js with Prisma adapter for storing OAuth tokens
+// Using JWT strategy for sessions (compatible with Edge runtime)
+// OAuth tokens are stored in database via Prisma adapter
 const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -55,15 +59,41 @@ const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    // Add user ID to JWT token
-    jwt({ token, user, account }) {
+    // Add user ID to JWT token and refresh OAuth tokens if expired
+    // OAuth tokens are automatically stored in database via Prisma adapter
+    async jwt({ token, user, trigger }) {
+      // On initial sign-in, set user ID
       if (user) {
         token.id = user.id;
+        token.lastTokenRefresh = Date.now();
       }
-      if (account) {
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
+
+      // Refresh tokens if user ID exists and enough time has passed since last check
+      // Check every 5 minutes to avoid excessive database queries
+      if (token.id) {
+        const now = Date.now();
+        const lastRefresh = (token.lastTokenRefresh as number | undefined) ?? 0;
+        const fiveMinutes = 5 * 60 * 1000;
+
+        // Only check token refresh if:
+        // 1. It's been 5+ minutes since last check, OR
+        // 2. Session is being updated (trigger === "update")
+        if (trigger === "update" || (now - lastRefresh) >= fiveMinutes) {
+          try {
+            const refreshed = await refreshUserTokens(token.id as string, "google");
+            if (refreshed) {
+              token.lastTokenRefresh = now;
+              if (isDevelopment()) {
+                console.log(`Token refresh check completed for user ${token.id}`);
+              }
+            }
+          } catch (error) {
+            // Log error but don't fail the request
+            console.error("Error refreshing tokens in JWT callback:", error);
+          }
+        }
       }
+
       return token;
     },
     // Add user ID to session from JWT
