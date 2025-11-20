@@ -168,7 +168,7 @@ Make sure your environment variables are loaded:
 
 ```bash
 # Check if DATABASE_URL is set (in root directory)
-cd /Users/andrew/Software/personal/my-ai
+cd /path/to/your/project
 echo $DATABASE_URL
 
 # If empty, make sure .env file exists and has DATABASE_URL
