@@ -80,17 +80,19 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         // 2. Session is being updated (trigger === "update")
         if (trigger === "update" || (now - lastRefresh) >= fiveMinutes) {
           try {
-            const refreshed = await refreshUserTokens(token.id as string, "google");
-            if (refreshed) {
-              token.lastTokenRefresh = now;
-              if (isDevelopment()) {
-                // eslint-disable-next-line no-console
-                console.log(`Token refresh check completed for user ${String(token.id)}`);
+          if (typeof token.id === "string") {
+            try {
+              const refreshed = await refreshUserTokens(token.id, "google");
+              if (refreshed) {
+                token.lastTokenRefresh = now;
+                if (isDevelopment()) {
+                  console.log(`Token refresh check completed for user ${token.id}`);
+                }
               }
+            } catch (error) {
+              // Log error but don't fail the request
+              console.error("Error refreshing tokens in JWT callback:", error);
             }
-          } catch (error) {
-            // Log error but don't fail the request
-            console.error("Error refreshing tokens in JWT callback:", error);
           }
         }
       }
