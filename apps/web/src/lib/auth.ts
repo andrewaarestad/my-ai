@@ -86,12 +86,19 @@ const { handlers, auth, signIn, signOut } = NextAuth({
                 if (refreshed) {
                   token.lastTokenRefresh = now;
                   if (isDevelopment()) {
-                    console.log(`Token refresh check completed for user ${token.id}`);
+                    await logInfo("Token refresh check completed", {
+                      userId: token.id,
+                    });
                   }
                 }
               } catch (error) {
                 // Log error but don't fail the request
-                console.error("Error refreshing tokens in JWT callback:", error);
+                if (isDevelopment()) {
+                  await logInfo("Error refreshing tokens in JWT callback", {
+                    userId: token.id,
+                    error: error instanceof Error ? error.message : String(error),
+                  });
+                }
               }
             }
           } catch (error) {
