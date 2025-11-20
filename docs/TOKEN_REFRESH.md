@@ -99,7 +99,7 @@ export async function GET(request: Request) {
   const accessToken = await getValidAccessToken(session.user.id, "google");
   
   if (!accessToken) {
-    return new Response("Failed to get access token", { status: 500 });
+    return new Response("Google account not connected or token expired", { status: 401 });
   }
 
   // Use token for Google API calls
