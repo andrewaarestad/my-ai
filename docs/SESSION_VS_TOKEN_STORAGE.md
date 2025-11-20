@@ -64,7 +64,8 @@ adapter: PrismaAdapter(prisma),  // ← Stores OAuth tokens in DB
 - Stateless
 
 ❌ **Cons**:
-- Can't revoke sessions from server-side easily
+- Can't revoke sessions from server-side easily  
+  _Note: With database-stored OAuth tokens (as implemented), you can partially mitigate this by deleting the user's account or token records from the database, which prevents further token refresh and effectively revokes access._
 - Session data limited by cookie size
 
 ### Database OAuth Tokens (Why Not JWT?)
