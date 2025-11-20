@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth-middleware";
 import { NextResponse } from "next/server";
 
 export default auth((req) => {
