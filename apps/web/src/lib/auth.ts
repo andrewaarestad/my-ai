@@ -60,7 +60,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     // Add user ID to JWT token and refresh OAuth tokens if expired
-    // OAuth tokens are automatically stored in database via Prisma adapter
+    // JWT callback refreshes OAuth tokens stored in database by Prisma adapter
     async jwt({ token, user, trigger }) {
       // On initial sign-in, set user ID
       if (user) {
