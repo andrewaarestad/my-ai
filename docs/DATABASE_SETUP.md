@@ -185,7 +185,7 @@ echo $DATABASE_URL
 **Solution**: 
 1. Create `.env` file in project root
 2. Add `DATABASE_URL` and `DIRECT_URL`
-3. Make sure `.env` is not in `.gitignore` (it should be ignored, but the file should exist locally)
+3. Make sure `.env` is listed in `.gitignore` (to prevent committing secrets), but ensure the file exists locally with your environment variables.
 
 ### Issue: "Can't reach database server"
 
