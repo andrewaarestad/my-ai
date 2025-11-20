@@ -216,7 +216,7 @@ Once your database is set up:
 
 1. ✅ **Database tables created** - You should see 5 tables in Prisma Studio
 2. ✅ **Prisma Client generated** - TypeScript types are available
-3. ⏭️ **Next**: Configure Prisma adapter in NextAuth (see `DATABASE_ADAPTER_SETUP.md`)
+3. ⏭️ **Next**: Configure Prisma adapter in NextAuth (see `PRISMA_ADAPTER_SETUP.md`)
 
 ## Database Schema Overview
 
