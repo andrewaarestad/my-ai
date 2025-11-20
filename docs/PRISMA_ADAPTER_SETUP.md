@@ -165,9 +165,9 @@ pnpm db:generate
 
 ## Next Steps
 
-- [ ] Implement automatic token refresh
-- [ ] Add token expiration checking
-- [ ] Create utility functions to access tokens
+- [x] Implement automatic token refresh (Done in `token-refresh.ts`)
+- [x] Add token expiration checking (Done in `isTokenExpired()`)
+- [x] Create utility functions to access tokens (Done: `getValidAccessToken`, `refreshUserTokens`)
 - [ ] Consider switching to database sessions (if Edge runtime not needed)
 
 ## Resources
