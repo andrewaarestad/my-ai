@@ -1,6 +1,17 @@
 import { prisma } from "./prisma";
 
 /**
+ * Google OAuth token response type
+ */
+interface GoogleTokenResponse {
+  access_token: string;
+  expires_in?: number;
+  refresh_token?: string;
+  error?: string;
+  error_description?: string;
+}
+
+/**
  * Refresh a Google OAuth access token using the refresh token
  *
  * @param refreshToken - The refresh token from the database
@@ -21,19 +32,21 @@ async function refreshGoogleToken(refreshToken: string) {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
+    const error = (await response.json().catch(() => ({}))) as
+      | GoogleTokenResponse
+      | Record<string, unknown>;
     throw new Error(
       `Failed to refresh token: ${response.status} ${response.statusText}. ${JSON.stringify(error)}`
     );
   }
 
-  const tokens = await response.json();
+  const tokens = (await response.json()) as GoogleTokenResponse;
 
   return {
     access_token: tokens.access_token,
-    expires_at: Math.floor(Date.now() / 1000) + (tokens.expires_in || 3600),
-    refresh_token: tokens.refresh_token || refreshToken, // Google may not return refresh_token if unchanged
-    expires_in: tokens.expires_in || 3600,
+    expires_at: Math.floor(Date.now() / 1000) + (tokens.expires_in ?? 3600),
+    refresh_token: tokens.refresh_token ?? refreshToken, // Google may not return refresh_token if unchanged
+    expires_in: tokens.expires_in ?? 3600,
   };
 }
 
@@ -90,11 +103,13 @@ export async function refreshUserTokens(
     });
 
     if (!account) {
+      // eslint-disable-next-line no-console
       console.warn(`No ${provider} account found for user ${userId}`);
       return null;
     }
 
     if (!account.refresh_token) {
+      // eslint-disable-next-line no-console
       console.warn(`No refresh token found for user ${userId}`);
       return null;
     }
@@ -110,6 +125,7 @@ export async function refreshUserTokens(
     }
 
     // Token is expired, refresh it
+    // eslint-disable-next-line no-console
     console.log(`Refreshing ${provider} token for user ${userId}`);
 
     const newTokens = await refreshGoogleToken(account.refresh_token);
@@ -130,6 +146,7 @@ export async function refreshUserTokens(
       },
     });
 
+    // eslint-disable-next-line no-console
     console.log(`Successfully refreshed ${provider} token for user ${userId}`);
 
     return {
@@ -138,6 +155,7 @@ export async function refreshUserTokens(
       refresh_token: newTokens.refresh_token,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error(`Error refreshing ${provider} token for user ${userId}:`, error);
     return null;
   }

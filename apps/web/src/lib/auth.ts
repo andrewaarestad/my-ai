@@ -84,7 +84,8 @@ const { handlers, auth, signIn, signOut } = NextAuth({
             if (refreshed) {
               token.lastTokenRefresh = now;
               if (isDevelopment()) {
-                console.log(`Token refresh check completed for user ${token.id}`);
+                // eslint-disable-next-line no-console
+                console.log(`Token refresh check completed for user ${String(token.id)}`);
               }
             }
           } catch (error) {
