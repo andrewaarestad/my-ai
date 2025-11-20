@@ -33,7 +33,7 @@ This guide will help you get your PostgreSQL database up and running for the My 
 
 ```bash
 # Make sure you're in the project root
-cd /Users/andrew/Software/personal/my-ai
+cd /path/to/my-ai
 
 # Install all dependencies (includes Prisma CLI)
 pnpm install
