@@ -79,17 +79,32 @@ runs:
         echo "🔍 Checking if schema changes match migration files..."
 
         # Check for drift between schema and migrations
-        if pnpm prisma migrate diff \
+        DIFF_OUTPUT=$(pnpm prisma migrate diff \
           --from-migrations ./prisma/migrations \
           --to-schema-datamodel ./prisma/schema.prisma \
-          --exit-code; then
+          --exit-code 2>&1) && DIFF_EXIT_CODE=$? || DIFF_EXIT_CODE=$?
+
+        if [ $DIFF_EXIT_CODE -eq 0 ]; then
           echo "✅ Schema matches migrations - no drift detected"
         else
-          echo "❌ Schema drift detected!"
-          echo ""
-          echo "Your schema.prisma has changes that are not reflected in migration files."
-          echo "Please run 'pnpm db:migrate' locally to create a migration for your changes."
-          exit 1
+          # Check if the error is due to missing migration_lock.toml
+          if echo "$DIFF_OUTPUT" | grep -q "missing migration_lock.toml"; then
+            echo "❌ Failed to check for schema drift!"
+            echo ""
+            echo "Error: migration_lock.toml is missing from prisma/migrations directory."
+            echo "This file is required to validate migrations."
+            echo "Please ensure your migrations directory is properly set up."
+            echo ""
+            echo "Full error:"
+            echo "$DIFF_OUTPUT"
+            exit 1
+          else
+            echo "❌ Schema drift detected!"
+            echo ""
+            echo "Your schema.prisma has changes that are not reflected in migration files."
+            echo "Please run 'pnpm db:migrate' locally to create a migration for your changes."
+            exit 1
+          fi
         fi
 
     - name: Validate migration files
