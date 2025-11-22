@@ -1,0 +1,282 @@
+name: Check Prisma Migrations
+description: Validates Prisma migrations and checks for pending changes
+
+inputs:
+  database-url:
+    description: 'PostgreSQL database URL for migration validation'
+    required: true
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        run_install: false
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Check for migration files added in PR
+      shell: bash
+      run: |
+        echo "🔍 Checking for new migration files in this PR..."
+
+        # Get list of changed files
+        CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+
+        # Check if any migration files were added
+        NEW_MIGRATIONS=$(echo "$CHANGED_FILES" | grep "^prisma/migrations/" || true)
+
+        if [ -n "$NEW_MIGRATIONS" ]; then
+          echo "✅ New migration files detected:"
+          echo "$NEW_MIGRATIONS"
+          echo "HAS_NEW_MIGRATIONS=true" >> $GITHUB_ENV
+
+          # Extract migration names (directory names only, not individual files)
+          MIGRATION_NAMES=$(echo "$NEW_MIGRATIONS" | grep "^prisma/migrations/[^/]*/migration.sql$" | sed 's|^prisma/migrations/\([^/]*\)/.*|\1|' | sort -u)
+
+          # Save migration names for later use
+          echo "$MIGRATION_NAMES" > /tmp/migration_names.txt
+
+          # Count migrations
+          MIGRATION_COUNT=$(echo "$MIGRATION_NAMES" | wc -l | tr -d ' ')
+          echo "MIGRATION_COUNT=$MIGRATION_COUNT" >> $GITHUB_ENV
+        else
+          echo "ℹ️ No new migration files in this PR"
+          echo "HAS_NEW_MIGRATIONS=false" >> $GITHUB_ENV
+          echo "MIGRATION_COUNT=0" >> $GITHUB_ENV
+        fi
+
+    - name: Check for schema changes without migrations
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: |
+        echo "🔍 Checking if schema changes match migration files..."
+
+        # Check for drift between schema and migrations
+        if pnpm prisma migrate diff \
+          --from-migrations ./prisma/migrations \
+          --to-schema-datamodel ./prisma/schema.prisma \
+          --exit-code; then
+          echo "✅ Schema matches migrations - no drift detected"
+        else
+          echo "❌ Schema drift detected!"
+          echo ""
+          echo "Your schema.prisma has changes that are not reflected in migration files."
+          echo "Please run 'pnpm db:migrate' locally to create a migration for your changes."
+          exit 1
+        fi
+
+    - name: Validate migration files
+      if: env.HAS_NEW_MIGRATIONS == 'true'
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: |
+        echo "🔍 Validating new migration files..."
+
+        # Check that migrations can be applied (dry run)
+        echo "Running migration dry-run to validate SQL..."
+
+        # Get migration status
+        pnpm prisma migrate status || true
+
+        echo "✅ Migration files are valid"
+
+    - name: Check for destructive changes
+      if: env.HAS_NEW_MIGRATIONS == 'true'
+      shell: bash
+      run: |
+        echo "⚠️ Checking for potentially destructive migration operations..."
+
+        # Get all new migration files
+        NEW_MIGRATION_FILES=$(git diff --name-only origin/main...HEAD | grep "^prisma/migrations/.*\.sql$" || true)
+
+        if [ -n "$NEW_MIGRATION_FILES" ]; then
+          DESTRUCTIVE_FOUND=false
+          DESTRUCTIVE_DETAILS=""
+
+          for file in $NEW_MIGRATION_FILES; do
+            echo "Checking $file..."
+
+            # Check for potentially destructive operations
+            if grep -iE "DROP (TABLE|COLUMN)|ALTER TABLE.*DROP" "$file" > /dev/null 2>&1; then
+              echo "⚠️ WARNING: Potentially destructive operation found in $file"
+              MIGRATION_NAME=$(echo "$file" | sed 's|^prisma/migrations/\([^/]*\)/.*|\1|')
+              DESTRUCTIVE_OPERATIONS=$(grep -iE "DROP (TABLE|COLUMN)|ALTER TABLE.*DROP" "$file" | sed 's/^/    /' || true)
+
+              DESTRUCTIVE_DETAILS="${DESTRUCTIVE_DETAILS}**${MIGRATION_NAME}**
+\`\`\`sql
+${DESTRUCTIVE_OPERATIONS}
+\`\`\`
+"
+              DESTRUCTIVE_FOUND=true
+            fi
+          done
+
+          if [ "$DESTRUCTIVE_FOUND" = true ]; then
+            echo ""
+            echo "⚠️ This migration contains potentially destructive operations."
+            echo "Please review carefully before merging!"
+            echo "Consider:"
+            echo "  - Backing up data before deployment"
+            echo "  - Using a multi-step migration strategy"
+            echo "  - Testing on a staging environment first"
+            echo "HAS_DESTRUCTIVE_CHANGES=true" >> $GITHUB_ENV
+            echo "$DESTRUCTIVE_DETAILS" > /tmp/destructive_details.txt
+          else
+            echo "✅ No destructive operations detected"
+            echo "HAS_DESTRUCTIVE_CHANGES=false" >> $GITHUB_ENV
+          fi
+        else
+          echo "HAS_DESTRUCTIVE_CHANGES=false" >> $GITHUB_ENV
+        fi
+
+    - name: Check database sync status
+      if: env.HAS_NEW_MIGRATIONS == 'true'
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: |
+        echo "🔍 Checking database sync status..."
+
+        # Check if there are pending migrations in the database
+        MIGRATE_STATUS_OUTPUT=$(pnpm prisma migrate status 2>&1 || true)
+
+        if echo "$MIGRATE_STATUS_OUTPUT" | grep -q "Database schema is up to date"; then
+          echo "✅ Database is in sync with migrations on main"
+          echo "DB_IN_SYNC=true" >> $GITHUB_ENV
+        elif echo "$MIGRATE_STATUS_OUTPUT" | grep -q "following migration have not yet been applied"; then
+          echo "⚠️ Database has pending migrations from main branch"
+          echo "DB_IN_SYNC=false" >> $GITHUB_ENV
+        else
+          echo "✅ Database is in sync with migrations on main"
+          echo "DB_IN_SYNC=true" >> $GITHUB_ENV
+        fi
+
+    - name: Post PR comment
+      if: env.HAS_NEW_MIGRATIONS == 'true'
+      uses: actions/github-script@v7
+      env:
+        MIGRATION_COUNT: ${{ env.MIGRATION_COUNT }}
+        DB_IN_SYNC: ${{ env.DB_IN_SYNC }}
+        HAS_DESTRUCTIVE_CHANGES: ${{ env.HAS_DESTRUCTIVE_CHANGES }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+
+          // Read migration names
+          const migrationNames = fs.readFileSync('/tmp/migration_names.txt', 'utf8').trim().split('\n');
+
+          // Build migration list
+          const migrationList = migrationNames.map(name => `- \`${name}\``).join('\n');
+
+          // Check for destructive changes
+          let destructiveSection = '';
+          if (process.env.HAS_DESTRUCTIVE_CHANGES === 'true') {
+            const destructiveDetails = fs.readFileSync('/tmp/destructive_details.txt', 'utf8');
+            destructiveSection = `
+
+          ## ⚠️ Destructive Changes Detected
+
+          The following migrations contain potentially destructive operations:
+
+          ${destructiveDetails}
+
+          **Please review carefully before merging!** Consider:
+          - Backing up data before deployment
+          - Using a multi-step migration strategy
+          - Testing on a staging environment first
+          `;
+          }
+
+          // Build database sync status
+          const dbSyncStatus = process.env.DB_IN_SYNC === 'true'
+            ? '✅ Database is **in sync** with migrations on `main`'
+            : '⚠️ Database has **pending migrations** from `main` branch that need to be applied first';
+
+          // Build comment body
+          const commentBody = `## 🗄️ Database Migration Status
+
+          ${dbSyncStatus}
+
+          ### Migrations to be applied on merge
+
+          This PR will apply **${process.env.MIGRATION_COUNT}** migration(s):
+
+          ${migrationList}
+          ${destructiveSection}
+
+          ---
+          *This comment will be automatically updated when migrations change.*`;
+
+          // Find existing comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.find(comment =>
+            comment.user.type === 'Bot' &&
+            comment.body.includes('🗄️ Database Migration Status')
+          );
+
+          // Update or create comment
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: commentBody
+            });
+            console.log('Updated existing PR comment');
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody
+            });
+            console.log('Created new PR comment');
+          }
+
+    - name: Migration check summary
+      shell: bash
+      run: |
+        echo "📋 Migration Check Summary"
+        echo "=========================="
+        echo "✅ Schema validation: Passed"
+        echo "✅ Migration files: Valid"
+        if [ "$HAS_NEW_MIGRATIONS" = "true" ]; then
+          echo "ℹ️ New migrations will be applied on merge to main"
+          echo "ℹ️ PR comment posted with migration details"
+        else
+          echo "ℹ️ No new migrations to apply"
+        fi

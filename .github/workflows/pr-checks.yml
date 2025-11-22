@@ -11,10 +11,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-migrations:
+    name: Check Database Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check migrations
+        uses: ./.github/actions/check-migrations
+        with:
+          database-url: ${{ secrets.DATABASE_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
   pr-checks:
     name: Lint, Type Check, Test & Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: check-migrations
 
     steps:
       - name: Checkout code
