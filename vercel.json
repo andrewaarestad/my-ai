@@ -3,5 +3,11 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/gmail/cron",
+      "schedule": "*/15 * * * *"
+    }
+  ]
 }
