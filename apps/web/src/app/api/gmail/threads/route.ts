@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { logError } from '@/lib/error-logger';
 
 export async function GET(request: NextRequest) {
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause
-    const where: any = {
+    const where: Prisma.GmailThreadWhereInput = {
       userId: session.user.id,
       accountEmail,
     };
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
       hasMore: offset + limit < total,
     });
   } catch (error) {
-    logError('Failed to fetch threads', { error });
+    void logError('Failed to fetch threads', { error });
     return NextResponse.json(
       {
         error: 'Failed to fetch threads',

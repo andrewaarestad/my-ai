@@ -43,6 +43,21 @@ interface GmailThread {
   messages?: GmailMessage[];
 }
 
+interface GmailHistoryRecord {
+  id: string;
+  messages?: GmailMessage[];
+  messagesAdded?: Array<{ message: GmailMessage }>;
+  messagesDeleted?: Array<{ message: { id: string } }>;
+  labelsAdded?: Array<{ message: { id: string }; labelIds: string[] }>;
+  labelsRemoved?: Array<{ message: { id: string }; labelIds: string[] }>;
+}
+
+interface GmailHistoryResponse {
+  history?: GmailHistoryRecord[];
+  nextPageToken?: string;
+  historyId: string;
+}
+
 export interface ParsedMessage {
   id: string;
   threadId: string;
@@ -92,7 +107,7 @@ export class GmailClient {
 
     if (!response.ok) {
       const error = await response.text();
-      logError('Gmail API request failed', { endpoint, status: response.status, error });
+      void logError('Gmail API request failed', { endpoint, status: response.status, error });
       throw new Error(`Gmail API error: ${response.status} - ${error}`);
     }
 
@@ -115,17 +130,17 @@ export class GmailClient {
     }
 
     const response = await this.fetch(`/users/me/messages?${params.toString()}`);
-    return response.json();
+    return response.json() as Promise<GmailListMessagesResponse>;
   }
 
   async getMessage(messageId: string, format: 'full' | 'metadata' | 'minimal' = 'full'): Promise<GmailMessage> {
     const response = await this.fetch(`/users/me/messages/${messageId}?format=${format}`);
-    return response.json();
+    return response.json() as Promise<GmailMessage>;
   }
 
   async getThread(threadId: string): Promise<GmailThread> {
     const response = await this.fetch(`/users/me/threads/${threadId}`);
-    return response.json();
+    return response.json() as Promise<GmailThread>;
   }
 
   async batchGetMessages(messageIds: string[]): Promise<GmailMessage[]> {
@@ -206,7 +221,7 @@ export class GmailClient {
 
   async getProfile(): Promise<{ emailAddress: string; messagesTotal: number; threadsTotal: number }> {
     const response = await this.fetch('/users/me/profile');
-    return response.json();
+    return response.json() as Promise<{ emailAddress: string; messagesTotal: number; threadsTotal: number }>;
   }
 
   async getHistoryList(startHistoryId: string, options: {
@@ -214,7 +229,7 @@ export class GmailClient {
     pageToken?: string;
     labelId?: string;
     historyTypes?: ('messageAdded' | 'messageDeleted' | 'labelAdded' | 'labelRemoved')[];
-  } = {}): Promise<any> {
+  } = {}): Promise<GmailHistoryResponse> {
     const params = new URLSearchParams();
     params.append('startHistoryId', startHistoryId);
 
@@ -226,7 +241,7 @@ export class GmailClient {
     }
 
     const response = await this.fetch(`/users/me/history?${params.toString()}`);
-    return response.json();
+    return response.json() as Promise<GmailHistoryResponse>;
   }
 
   // Helper: Check if message has specific labels
@@ -235,6 +250,6 @@ export class GmailClient {
   }
 }
 
-export async function createGmailClient(userId: string): Promise<GmailClient> {
+export function createGmailClient(userId: string): GmailClient {
   return new GmailClient(userId);
 }

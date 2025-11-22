@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { createGmailClient } from '@/lib/gmail-client';
 import { createGmailSyncService } from '@/lib/gmail-sync';
@@ -12,7 +13,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as {
+      maxMessages?: number;
+      query?: string;
+      isInitialSync?: boolean;
+      useIncremental?: boolean;
+    };
     const {
       maxMessages = 100,
       query,
@@ -27,15 +33,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Gmail client and sync service
-    const gmailClient = await createGmailClient(session.user.id);
-    const syncService = await createGmailSyncService(
+    const gmailClient = createGmailClient(session.user.id);
+    const syncService = createGmailSyncService(
       session.user.id,
       accountEmail,
       gmailClient
     );
 
     // Perform sync
-    let result;
+    let result: { synced: number; errors: number };
     if (useIncremental) {
       result = await syncService.incrementalSync();
     } else {
@@ -52,7 +58,7 @@ export async function POST(request: NextRequest) {
       errors: result.errors,
     });
   } catch (error) {
-    logError('Gmail sync API error', { error });
+    void logError('Gmail sync API error', { error });
     return NextResponse.json(
       {
         error: 'Failed to sync Gmail messages',
@@ -77,8 +83,8 @@ export async function GET() {
     }
 
     // Create Gmail client and sync service to get sync state
-    const gmailClient = await createGmailClient(session.user.id);
-    const syncService = await createGmailSyncService(
+    const gmailClient = createGmailClient(session.user.id);
+    const syncService = createGmailSyncService(
       session.user.id,
       accountEmail,
       gmailClient
@@ -90,7 +96,7 @@ export async function GET() {
       syncState: syncState || null,
     });
   } catch (error) {
-    logError('Failed to get sync state', { error });
+    void logError('Failed to get sync state', { error });
     return NextResponse.json(
       {
         error: 'Failed to get sync state',

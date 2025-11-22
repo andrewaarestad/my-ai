@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { GmailClient, ParsedMessage } from './gmail-client';
+import type { GmailClient, ParsedMessage } from './gmail-client';
 import { logError } from './error-logger';
 
 export class GmailSyncService {
@@ -53,7 +53,7 @@ export class GmailSyncService {
             await this.storeMessage(parsed);
             synced++;
           } catch (error) {
-            logError('Failed to store message', { messageId: gmailMessage.id, error });
+            void logError('Failed to store message', { messageId: gmailMessage.id, error });
             errors++;
           }
         }
@@ -70,7 +70,7 @@ export class GmailSyncService {
 
       return { synced, errors };
     } catch (error) {
-      logError('Gmail sync failed', { userId: this.userId, error });
+      void logError('Gmail sync failed', { userId: this.userId, error });
       await this.updateSyncState({
         isSyncing: false,
         lastError: error instanceof Error ? error.message : 'Unknown error',
@@ -278,14 +278,16 @@ export class GmailSyncService {
       let errors = 0;
       let pageToken: string | undefined;
       let currentHistoryId = syncState.historyId;
+      let hasMore = true;
 
-      while (true) {
+      while (hasMore) {
         const history = await this.gmailClient.getHistoryList(currentHistoryId, {
           pageToken,
           historyTypes: ['messageAdded', 'messageDeleted', 'labelAdded', 'labelRemoved'],
         });
 
         if (!history.history || history.history.length === 0) {
+          hasMore = false;
           break;
         }
 
@@ -300,7 +302,7 @@ export class GmailSyncService {
                 await this.storeMessage(parsed);
                 synced++;
               } catch (error) {
-                logError('Failed to process new message', { messageId: message.id, error });
+                void logError('Failed to process new message', { messageId: message.id, error });
                 errors++;
               }
             }
@@ -327,7 +329,7 @@ export class GmailSyncService {
                 const parsed = this.gmailClient.parseMessage(fullMessage);
                 await this.storeMessage(parsed);
               } catch (error) {
-                logError('Failed to update message labels', { messageId, error });
+                void logError('Failed to update message labels', { messageId, error });
               }
             }
           }
@@ -335,7 +337,9 @@ export class GmailSyncService {
 
         currentHistoryId = history.historyId;
         pageToken = history.nextPageToken;
-        if (!pageToken) break;
+        if (!pageToken) {
+          hasMore = false;
+        }
       }
 
       await this.updateSyncState({
@@ -346,7 +350,7 @@ export class GmailSyncService {
 
       return { synced, errors };
     } catch (error) {
-      logError('Incremental sync failed', { userId: this.userId, error });
+      void logError('Incremental sync failed', { userId: this.userId, error });
       await this.updateSyncState({
         isSyncing: false,
         lastError: error instanceof Error ? error.message : 'Unknown error',
@@ -356,6 +360,6 @@ export class GmailSyncService {
   }
 }
 
-export async function createGmailSyncService(userId: string, accountEmail: string, gmailClient: GmailClient) {
+export function createGmailSyncService(userId: string, accountEmail: string, gmailClient: GmailClient) {
   return new GmailSyncService(userId, accountEmail, gmailClient);
 }

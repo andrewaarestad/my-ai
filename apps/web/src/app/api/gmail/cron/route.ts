@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createGmailClient } from '@/lib/gmail-client';
 import { createGmailSyncService } from '@/lib/gmail-sync';
@@ -44,8 +45,8 @@ export async function GET(request: NextRequest) {
         }
 
         // Create Gmail client and sync service
-        const gmailClient = await createGmailClient(userId);
-        const syncService = await createGmailSyncService(
+        const gmailClient = createGmailClient(userId);
+        const syncService = createGmailSyncService(
           userId,
           accountEmail,
           gmailClient
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
           errors: result.errors,
         });
       } catch (error) {
-        logError('Failed to sync for user', {
+        void logError('Failed to sync for user', {
           userId: account.userId,
           error,
         });
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       results,
     });
   } catch (error) {
-    logError('Cron job failed', { error });
+    void logError('Cron job failed', { error });
     return NextResponse.json(
       {
         error: 'Cron job failed',
