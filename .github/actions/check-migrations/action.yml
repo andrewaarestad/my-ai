@@ -82,6 +82,7 @@ runs:
         DIFF_OUTPUT=$(pnpm prisma migrate diff \
           --from-migrations ./prisma/migrations \
           --to-schema-datamodel ./prisma/schema.prisma \
+          --shadow-database-url "$DATABASE_URL" \
           --exit-code 2>&1) && DIFF_EXIT_CODE=$? || DIFF_EXIT_CODE=$?
 
         if [ $DIFF_EXIT_CODE -eq 0 ]; then
