@@ -130,11 +130,7 @@ runs:
               MIGRATION_NAME=$(echo "$file" | sed 's|^prisma/migrations/\([^/]*\)/.*|\1|')
               DESTRUCTIVE_OPERATIONS=$(grep -iE "DROP (TABLE|COLUMN)|ALTER TABLE.*DROP" "$file" | sed 's/^/    /' || true)
 
-              DESTRUCTIVE_DETAILS="${DESTRUCTIVE_DETAILS}**${MIGRATION_NAME}**
-\`\`\`sql
-${DESTRUCTIVE_OPERATIONS}
-\`\`\`
-"
+              DESTRUCTIVE_DETAILS="${DESTRUCTIVE_DETAILS}**${MIGRATION_NAME}**"$'\n'"\`\`\`sql"$'\n'"${DESTRUCTIVE_OPERATIONS}"$'\n'"\`\`\`"$'\n'
               DESTRUCTIVE_FOUND=true
             fi
           done
