@@ -131,9 +131,9 @@ runs:
               DESTRUCTIVE_OPERATIONS=$(grep -iE "DROP (TABLE|COLUMN)|ALTER TABLE.*DROP" "$file" | sed 's/^/    /' || true)
 
               DESTRUCTIVE_DETAILS="${DESTRUCTIVE_DETAILS}**${MIGRATION_NAME}**
-\`\`\`sql
+\\\`\\\`\\\`sql
 ${DESTRUCTIVE_OPERATIONS}
-\`\`\`
+\\\`\\\`\\\`
 "
               DESTRUCTIVE_FOUND=true
             fi
