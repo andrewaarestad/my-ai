@@ -1,0 +1,25 @@
+name: Deploy on Merge to Main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-migrations:
+    name: Deploy Database Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy migrations
+        uses: ./.github/actions/deploy-migrations
+        with:
+          database-url: ${{ secrets.DATABASE_URL }}

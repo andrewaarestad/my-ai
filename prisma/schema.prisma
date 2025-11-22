@@ -26,6 +26,10 @@ model User {
   accounts          Account[]
   sessions          Session[]
   connectedAccounts ConnectedAccount[]
+  gmailMessages     GmailMessage[]
+  gmailThreads      GmailThread[]
+  gmailAttachments  GmailAttachment[]
+  gmailSyncStates   GmailSyncState[]
 
   @@map("users")
 }
@@ -97,4 +101,126 @@ model ConnectedAccount {
   @@unique([userId, provider, providerAccountId])
   @@index([userId])
   @@map("connected_accounts")
+}
+
+// Gmail Models
+
+model GmailMessage {
+  id              String    @id // Gmail message ID
+  userId          String
+  threadId        String
+  accountEmail    String    // Which Gmail account this belongs to
+
+  // Message metadata
+  subject         String?
+  snippet         String?   // Short preview of message body
+  from            String?
+  to              String[]  // Array of recipients
+  cc              String[]  @default([])
+  bcc             String[]  @default([])
+
+  // Content
+  bodyText        String?   @db.Text // Plain text body
+  bodyHtml        String?   @db.Text // HTML body
+
+  // Gmail-specific
+  labelIds        String[]  @default([]) // Gmail label IDs
+  historyId       String?   // For incremental sync
+  internalDate    DateTime  // When Gmail received the message
+
+  // Flags
+  isRead          Boolean   @default(false)
+  isStarred       Boolean   @default(false)
+  isImportant     Boolean   @default(false)
+  isDraft         Boolean   @default(false)
+  isSent          Boolean   @default(false)
+  isTrash         Boolean   @default(false)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread          GmailThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  attachments     GmailAttachment[]
+
+  @@index([userId])
+  @@index([threadId])
+  @@index([accountEmail])
+  @@index([internalDate])
+  @@index([isRead])
+  @@map("gmail_messages")
+}
+
+model GmailThread {
+  id              String    @id // Gmail thread ID
+  userId          String
+  accountEmail    String
+
+  subject         String?
+  snippet         String?
+  lastMessageDate DateTime
+  messageCount    Int       @default(1)
+
+  // Flags (derived from messages in thread)
+  hasUnread       Boolean   @default(false)
+  isStarred       Boolean   @default(false)
+  isImportant     Boolean   @default(false)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages        GmailMessage[]
+
+  @@index([userId])
+  @@index([accountEmail])
+  @@index([lastMessageDate])
+  @@map("gmail_threads")
+}
+
+model GmailAttachment {
+  id              String    @id @default(cuid())
+  messageId       String
+  userId          String
+
+  attachmentId    String    // Gmail attachment ID
+  filename        String
+  mimeType        String
+  size            Int       // Size in bytes
+
+  // Storage (optional - for future implementation)
+  storedPath      String?   // If downloaded locally or to cloud storage
+
+  createdAt       DateTime  @default(now())
+
+  message         GmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, attachmentId], name: "messageId_attachmentId")
+  @@index([messageId])
+  @@index([userId])
+  @@map("gmail_attachments")
+}
+
+model GmailSyncState {
+  id              String    @id @default(cuid())
+  userId          String
+  accountEmail    String
+
+  lastSyncedAt    DateTime?
+  historyId       String?   // Latest historyId for incremental sync
+  pageToken       String?   // For paginated sync
+
+  // Sync status
+  isSyncing       Boolean   @default(false)
+  lastError       String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, accountEmail])
+  @@index([userId])
+  @@map("gmail_sync_state")
 }
