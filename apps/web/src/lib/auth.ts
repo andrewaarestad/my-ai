@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { refreshUserTokens } from "./token-refresh";
 import { logInfo } from "./error-logger";
-import { isDevelopment } from "./env";
+import { isDevelopment, isProduction } from "./env";
 
 // Extend the built-in session type
 declare module "next-auth" {
@@ -57,6 +57,47 @@ const { handlers, auth, signIn, signOut } = NextAuth({
   // Use JWT strategy for Edge runtime compatibility
   session: {
     strategy: "jwt",
+  },
+  // Configure cookies for PKCE code verifier
+  // This is critical for OAuth flows, especially in production/Vercel
+  // The PKCE code verifier must be properly stored and retrieved during OAuth callback
+  cookies: {
+    pkceCodeVerifier: {
+      name: `authjs.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+      },
+    },
+    state: {
+      name: `authjs.state`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+      },
+    },
+    callbackUrl: {
+      name: `authjs.callback_url`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+      },
+    },
+    sessionToken: {
+      name: `${process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction() ? "__Secure-" : ""}authjs.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+      },
+    },
   },
   callbacks: {
     // Add user ID to JWT token and refresh OAuth tokens if expired
