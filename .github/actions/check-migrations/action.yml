@@ -48,23 +48,25 @@ runs:
         # Get list of changed files
         CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
 
-        # Check if any migration files were added
-        NEW_MIGRATIONS=$(echo "$CHANGED_FILES" | grep "^prisma/migrations/" || true)
+        # Check if any actual migration directories were added (ignore migration_lock.toml)
+        # Look specifically for migration.sql files in migration directories
+        MIGRATION_SQL_FILES=$(echo "$CHANGED_FILES" | grep "^prisma/migrations/[^/]*/migration.sql$" || true)
 
-        if [ -n "$NEW_MIGRATIONS" ]; then
-          echo "✅ New migration files detected:"
-          echo "$NEW_MIGRATIONS"
-          echo "HAS_NEW_MIGRATIONS=true" >> $GITHUB_ENV
-
-          # Extract migration names (directory names only, not individual files)
-          MIGRATION_NAMES=$(echo "$NEW_MIGRATIONS" | grep "^prisma/migrations/[^/]*/migration.sql$" | sed 's|^prisma/migrations/\([^/]*\)/.*|\1|' | sort -u)
-
-          # Save migration names for later use
-          echo "$MIGRATION_NAMES" > /tmp/migration_names.txt
+        if [ -n "$MIGRATION_SQL_FILES" ]; then
+          # Extract migration names (directory names only)
+          MIGRATION_NAMES=$(echo "$MIGRATION_SQL_FILES" | sed 's|^prisma/migrations/\([^/]*\)/.*|\1|' | sort -u)
 
           # Count migrations
           MIGRATION_COUNT=$(echo "$MIGRATION_NAMES" | wc -l | tr -d ' ')
+
+          echo "✅ New migration files detected:"
+          echo "$MIGRATION_NAMES"
+
+          echo "HAS_NEW_MIGRATIONS=true" >> $GITHUB_ENV
           echo "MIGRATION_COUNT=$MIGRATION_COUNT" >> $GITHUB_ENV
+
+          # Save migration names for later use
+          echo "$MIGRATION_NAMES" > /tmp/migration_names.txt
         else
           echo "ℹ️ No new migration files in this PR"
           echo "HAS_NEW_MIGRATIONS=false" >> $GITHUB_ENV
