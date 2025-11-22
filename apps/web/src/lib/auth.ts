@@ -90,7 +90,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
       },
     },
     sessionToken: {
-      name: `${process.env.NEXTAUTH_URL?.startsWith("https://") || isProduction() ? "__Secure-" : ""}authjs.session-token`,
+      name: `${process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction() ? "__Secure-" : ""}authjs.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
