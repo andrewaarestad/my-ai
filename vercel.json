@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/gmail/cron",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
