@@ -19,11 +19,21 @@ jobs:
       contents: read
       pull-requests: write
 
+    # NOTE: The check-migrations job requires the DATABASE_URL secret to be configured in your repository.
+    # If this secret is missing, the workflow will fail. Please ensure it is set in your repository settings.
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Validate DATABASE_URL secret
+        run: |
+          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+            echo "ERROR: The DATABASE_URL secret is not set. Please configure it in your repository settings."
+            exit 1
+          fi
 
       - name: Check migrations
         uses: ./.github/actions/check-migrations

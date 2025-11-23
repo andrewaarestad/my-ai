@@ -106,6 +106,9 @@ runs:
             echo ""
             echo "Your schema.prisma has changes that are not reflected in migration files."
             echo "Please run 'pnpm db:migrate' locally to create a migration for your changes."
+            echo ""
+            echo "Diff output:"
+            echo "$DIFF_OUTPUT"
             exit 1
           fi
         fi
@@ -189,7 +192,7 @@ runs:
         if echo "$MIGRATE_STATUS_OUTPUT" | grep -q "Database schema is up to date"; then
           echo "✅ Database is in sync with migrations on main"
           echo "DB_IN_SYNC=true" >> $GITHUB_ENV
-        elif echo "$MIGRATE_STATUS_OUTPUT" | grep -q "following migration have not yet been applied"; then
+        elif echo "$MIGRATE_STATUS_OUTPUT" | grep -q "following migrations have not yet been applied"; then
           echo "⚠️ Database has pending migrations from main branch"
           echo "DB_IN_SYNC=false" >> $GITHUB_ENV
         else
@@ -244,9 +247,9 @@ runs:
 
           ${dbSyncStatus}
 
-          ### Migrations to be applied on merge
+          ### Migrations to be applied on merge to main
 
-          This PR will apply **${process.env.MIGRATION_COUNT}** migration(s):
+          On merge to \`main\`, this PR will apply **${process.env.MIGRATION_COUNT}** migration(s):
 
           ${migrationList}
           ${destructiveSection}

@@ -25,7 +25,7 @@ You are using Claude Code to systematically resolve all comments, to-dos, and is
 Claude Code automatically understands the current git branch and PR context. You don't need to specify which PR you're working on - Claude Code will:
 - Detect the current branch
 - Understand associated PR context
-- Fetch PR comments and review threads automatically
+- Fetch PR comments automatically
 
 ## Workflow Details
 
@@ -45,7 +45,9 @@ Group the items by type (code changes, documentation, responses to questions).
 
 #### Phase 1.2: Filtering
 
-For each item, consider whether it should be marked as "will not fix". This should be applied to comments that relate to style or coding preference. Anything that isn't a potential bug or performance problem should be closed without fix. These items should be summarized and presented to the user, along with being posted in a comment on the PR. Do not take any action on these items until you begin Phase 3: Execution.
+For each item, consider whether it should be marked as "will not fix". This should be applied to comments that relate to style or coding preference. Anything that isn't a potential bug or performance problem should be closed without fix. The exception to this rule is simple grammar or typo fixes which have no code impact.
+
+These items should be summarized and presented to the user, along with being posted in a comment on the PR. Do not take any action on these items until you begin Phase 3: Execution.
 
 #### Phase 1.3: Solutioning
 
@@ -105,6 +107,9 @@ After addressing all items:
 2. Verify that all conversations show as resolved
 3. Create a summary of all changes made
 4. Commit the changes with a clear message
+5. Push the commit to GitHub
+
+This workflow is complete when the changes have been committed and pushed.
 
 ## Appendix 1: Using GitHub CLI Commands
 

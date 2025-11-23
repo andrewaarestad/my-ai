@@ -45,12 +45,3 @@ runs:
         echo "🚀 Deploying database migrations..."
         pnpm prisma migrate deploy
         echo "✅ Migrations deployed successfully!"
-
-    - name: Generate Prisma Client
-      shell: bash
-      env:
-        DATABASE_URL: ${{ inputs.database-url }}
-      run: |
-        echo "🔄 Generating Prisma Client..."
-        pnpm prisma generate
-        echo "✅ Prisma Client generated successfully!"
