@@ -1,0 +1,45 @@
+{
+  "name": "@my-ai/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "My AI - Desktop application for managing AI agents",
+  "main": "app/background.js",
+  "scripts": {
+    "dev": "nextron",
+    "build": "nextron build",
+    "clean": "rm -rf app dist .next .turbo node_modules",
+    "lint": "eslint main renderer --ext .ts,.tsx --max-warnings 0",
+    "lint:fix": "eslint main renderer --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@babel/runtime-corejs3": "^7.28.4",
+    "@prisma/adapter-pg": "^6.19.0",
+    "@prisma/client": "^6.19.0",
+    "@prisma/driver-adapter-utils": "^6.19.0",
+    "electron-serve": "^1.3.0",
+    "electron-store": "^8.2.0",
+    "next": "^16.0.3",
+    "next-auth": "5.0.0-beta.30",
+    "pg": "^8.16.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@my-ai/eslint-config": "workspace:*",
+    "@my-ai/typescript-config": "workspace:*",
+    "@types/node": "^22.9.3",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "electron": "^34.5.8",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.1",
+    "nextron": "^9.5.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3"
+  }
+}

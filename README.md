@@ -4,12 +4,13 @@ A platform for building and managing AI agents to tackle personal tasks.
 
 ## Overview
 
-My AI is a monorepo-based platform that provides a web interface for managing AI agents, Model Context Protocol (MCP) integrations, and authorization configurations.
+My AI is a monorepo-based platform that provides both web and desktop interfaces for managing AI agents, Model Context Protocol (MCP) integrations, and authorization configurations.
 
 ## Tech Stack
 
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Frontend**: Next.js 16 with App Router, React 19, Tailwind CSS
+- **Desktop**: Electron + Next.js via Nextron
 - **Language**: TypeScript (strict mode)
 - **Authentication**: NextAuth.js v5 (Auth.js) with Google OAuth
 - **Database**: Prisma ORM with PostgreSQL (Vercel Postgres/Supabase)
@@ -23,7 +24,8 @@ My AI is a monorepo-based platform that provides a web interface for managing AI
 ```
 my-ai/
 ├── apps/
-│   └── web/              # Next.js frontend application
+│   ├── web/              # Next.js web application
+│   └── desktop/          # Electron desktop application
 ├── packages/
 │   ├── eslint-config/    # Shared ESLint configuration
 │   ├── typescript-config/# Shared TypeScript configuration
@@ -178,7 +180,8 @@ pnpm type-check
 
 ### Apps
 
-- **[@my-ai/web](./apps/web)**: Next.js frontend for managing AI agents
+- **[@my-ai/web](./apps/web)**: Next.js web application for managing AI agents
+- **[@my-ai/desktop](./apps/desktop)**: Electron desktop application for managing AI agents
 
 ### Shared Packages
 
