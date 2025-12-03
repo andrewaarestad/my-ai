@@ -1,73 +1,47 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { createAuthenticatedHandler } from '@/lib/api/route-handler';
 import { createTaskListService } from '@/lib/task-service';
-import { logError } from '@/lib/error-logger';
+import {
+  CreateTaskDto,
+  GetTasksQueryDto,
+  type TaskListResponseDto,
+  type TaskResponseDto,
+} from '@/lib/dto/task.dto';
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth();
+/**
+ * GET /api/tasks
+ * List all tasks for the authenticated user
+ */
+export const GET = createAuthenticatedHandler<never, GetTasksQueryDto, TaskListResponseDto>(
+  {
+    querySchema: GetTasksQueryDto,
+  },
+  async ({ query, context }) => {
+    const service = createTaskListService(context.userId);
+    const tasks = await service.getTasks({ includeCompleted: query?.includeCompleted });
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const includeCompleted = searchParams.get('includeCompleted') === 'true';
-
-    const service = createTaskListService(session.user.id);
-    const tasks = await service.getTasks({ includeCompleted });
-
-    return NextResponse.json({
+    return {
       success: true,
       tasks,
       total: tasks.length,
-    });
-  } catch (error) {
-    void logError('Failed to fetch tasks', { error });
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch tasks',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    };
   }
-}
+);
 
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
+/**
+ * POST /api/tasks
+ * Create a new task
+ */
+export const POST = createAuthenticatedHandler<CreateTaskDto, never, TaskResponseDto>(
+  {
+    bodySchema: CreateTaskDto,
+  },
+  async ({ body, context }) => {
+    const service = createTaskListService(context.userId);
+    const task = await service.createTask(body!.text);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { text } = body;
-
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Task text is required and cannot be empty' },
-        { status: 400 }
-      );
-    }
-
-    const service = createTaskListService(session.user.id);
-    const task = await service.createTask(text);
-
-    return NextResponse.json({
+    return {
       success: true,
       task,
-    });
-  } catch (error) {
-    void logError('Failed to create task', { error });
-    return NextResponse.json(
-      {
-        error: 'Failed to create task',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    };
   }
-}
+);

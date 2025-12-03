@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { TaskListItem } from '@prisma/client';
+import type { TaskDto } from '@/lib/dto/task.dto';
 
 interface Props {
-  task: TaskListItem;
+  task: TaskDto;
   isLast: boolean;
   onComplete: (id: string) => void;
   onUpdate: (id: string, text: string) => void;

@@ -2,6 +2,13 @@
 
 import { useState, useRef } from 'react';
 import { TaskListItemComponent } from './TaskListItem';
+import { api } from '@/lib/api/client';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  TaskResponseDto,
+  type TaskDto,
+} from '@/lib/dto/task.dto';
 import type { TaskListItem } from '@prisma/client';
 
 interface Props {
@@ -9,23 +16,20 @@ interface Props {
 }
 
 export function TaskList({ initialTasks }: Props) {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<TaskDto[]>(initialTasks);
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskText, setNewTaskText] = useState('');
   const newTaskInputRef = useRef<HTMLInputElement>(null);
 
   const handleComplete = async (id: string) => {
     try {
-      const response = await fetch(`/api/tasks/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completed: true }),
-      });
+      // Validate request data
+      const requestData = UpdateTaskDto.parse({ completed: true });
 
-      if (response.ok) {
-        // Optimistic update: hide completed task
-        setTasks(tasks.filter((t) => t.id !== id));
-      }
+      await api.patch(`/api/tasks/${id}`, requestData, TaskResponseDto);
+
+      // Optimistic update: hide completed task
+      setTasks(tasks.filter((t) => t.id !== id));
     } catch (error) {
       console.error('Failed to complete task:', error);
     }
@@ -33,16 +37,12 @@ export function TaskList({ initialTasks }: Props) {
 
   const handleUpdate = async (id: string, text: string) => {
     try {
-      const response = await fetch(`/api/tasks/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
+      // Validate request data
+      const requestData = UpdateTaskDto.parse({ text });
 
-      if (response.ok) {
-        const { task } = await response.json();
-        setTasks(tasks.map((t) => (t.id === id ? task : t)));
-      }
+      const response = await api.patch(`/api/tasks/${id}`, requestData, TaskResponseDto);
+
+      setTasks(tasks.map((t) => (t.id === id ? response.task : t)));
     } catch (error) {
       console.error('Failed to update task:', error);
     }
@@ -52,18 +52,14 @@ export function TaskList({ initialTasks }: Props) {
     if (text.trim().length === 0) return;
 
     try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim() }),
-      });
+      // Validate request data
+      const requestData = CreateTaskDto.parse({ text: text.trim() });
 
-      if (response.ok) {
-        const { task } = await response.json();
-        setTasks([...tasks, task]);
-        setNewTaskText('');
-        setIsCreating(false);
-      }
+      const response = await api.post('/api/tasks', requestData, TaskResponseDto);
+
+      setTasks([...tasks, response.task]);
+      setNewTaskText('');
+      setIsCreating(false);
     } catch (error) {
       console.error('Failed to create task:', error);
     }

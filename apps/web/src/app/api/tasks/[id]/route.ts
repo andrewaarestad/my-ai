@@ -1,88 +1,53 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { createAuthenticatedHandler } from '@/lib/api/route-handler';
 import { createTaskListService } from '@/lib/task-service';
-import { logError } from '@/lib/error-logger';
+import {
+  UpdateTaskDto,
+  type TaskResponseDto,
+  type DeleteTaskResponseDto,
+} from '@/lib/dto/task.dto';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await auth();
+/**
+ * PATCH /api/tasks/[id]
+ * Update a task (text or completion status)
+ */
+export const PATCH = createAuthenticatedHandler<UpdateTaskDto, never, TaskResponseDto>(
+  {
+    bodySchema: UpdateTaskDto,
+  },
+  async ({ body, context }) => {
+    const service = createTaskListService(context.userId);
+    const taskId = context.params!.id;
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const service = createTaskListService(session.user.id);
+    let task;
 
     // Handle task completion
-    if ('completed' in body && body.completed === true) {
-      const task = await service.completeTask(params.id);
-      return NextResponse.json({
-        success: true,
-        task,
-      });
+    if (body!.completed === true) {
+      task = await service.completeTask(taskId);
     }
-
     // Handle text update
-    if ('text' in body) {
-      if (typeof body.text !== 'string' || body.text.trim().length === 0) {
-        return NextResponse.json(
-          { error: 'Task text cannot be empty' },
-          { status: 400 }
-        );
-      }
-      const task = await service.updateTask(params.id, body.text);
-      return NextResponse.json({
-        success: true,
-        task,
-      });
+    else if (body!.text !== undefined) {
+      task = await service.updateTask(taskId, body!.text);
     }
 
-    return NextResponse.json(
-      { error: 'Invalid update payload' },
-      { status: 400 }
-    );
-  } catch (error) {
-    void logError('Failed to update task', { error, taskId: params.id });
-    return NextResponse.json(
-      {
-        error: 'Failed to update task',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const service = createTaskListService(session.user.id);
-    await service.deleteTask(params.id);
-
-    return NextResponse.json({
+    return {
       success: true,
-    });
-  } catch (error) {
-    void logError('Failed to delete task', { error, taskId: params.id });
-    return NextResponse.json(
-      {
-        error: 'Failed to delete task',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+      task: task!,
+    };
   }
-}
+);
+
+/**
+ * DELETE /api/tasks/[id]
+ * Delete a task
+ */
+export const DELETE = createAuthenticatedHandler<never, never, DeleteTaskResponseDto>(
+  {},
+  async ({ context }) => {
+    const service = createTaskListService(context.userId);
+    await service.deleteTask(context.params!.id);
+
+    return {
+      success: true,
+    };
+  }
+);
