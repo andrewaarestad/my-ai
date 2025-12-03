@@ -30,6 +30,7 @@ model User {
   gmailThreads      GmailThread[]
   gmailAttachments  GmailAttachment[]
   gmailSyncStates   GmailSyncState[]
+  taskListItems     TaskListItem[]
 
   @@map("users")
 }
@@ -223,4 +224,24 @@ model GmailSyncState {
   @@unique([userId, accountEmail])
   @@index([userId])
   @@map("gmail_sync_state")
+}
+
+// Task List Models
+
+model TaskListItem {
+  id          String    @id @default(cuid())
+  userId      String
+  text        String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  order       Int       @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completed, order])
+  @@index([userId, order])
+  @@map("task_list_item")
 }

@@ -33,6 +33,22 @@ export default async function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* My Tasks */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+            <h2 className="text-2xl font-semibold text-white mb-3">
+              My Tasks
+            </h2>
+            <p className="text-gray-300 mb-4">
+              Manage your personal task list
+            </p>
+            <Link
+              href="/todo"
+              className="inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700"
+            >
+              View Tasks
+            </Link>
+          </div>
+
           {/* Connected Accounts */}
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
             <h2 className="text-2xl font-semibold text-white mb-3">
