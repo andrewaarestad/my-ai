@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { TaskListItemComponent } from './TaskListItem';
 import { api } from '@/lib/api/client';
 import {
@@ -67,7 +67,6 @@ export function TaskList({ initialTasks }: Props) {
 
   const handlePlusClick = () => {
     setIsCreating(true);
-    setTimeout(() => newTaskInputRef.current?.focus(), 0);
   };
 
   const handleEnterOnLast = () => {
@@ -78,11 +77,7 @@ export function TaskList({ initialTasks }: Props) {
     if (e.key === 'Enter') {
       e.preventDefault();
       void handleCreateTask(newTaskText);
-      // Keep input active for rapid entry
-      setTimeout(() => {
-        setIsCreating(true);
-        setTimeout(() => newTaskInputRef.current?.focus(), 0);
-      }, 0);
+      // Keep input active for rapid entry - reset text only, useEffect handles focus
     } else if (e.key === 'Escape') {
       setIsCreating(false);
       setNewTaskText('');
@@ -97,6 +92,13 @@ export function TaskList({ initialTasks }: Props) {
       setNewTaskText('');
     }
   };
+
+  // Handle focus when isCreating becomes true
+  useEffect(() => {
+    if (isCreating && newTaskInputRef.current) {
+      newTaskInputRef.current.focus();
+    }
+  }, [isCreating]);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -139,6 +141,7 @@ export function TaskList({ initialTasks }: Props) {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

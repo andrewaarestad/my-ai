@@ -69,6 +69,7 @@ export function TaskListItemComponent({
         checked={false}
         onChange={() => onComplete(task.id)}
         className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+        aria-label={`Mark "${task.text}" as complete`}
       />
 
       {isEditing ? (

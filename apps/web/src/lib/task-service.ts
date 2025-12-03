@@ -48,56 +48,71 @@ export class TaskListService {
       throw new Error('Task text cannot be empty');
     }
 
-    return this.ensureOwnership(taskId, async () => {
-      return prisma.taskListItem.update({
-        where: { id: taskId },
-        data: { text: text.trim() },
-      });
+    // Use atomic operation with userId in where clause to prevent race conditions
+    const updated = await prisma.taskListItem.updateMany({
+      where: { id: taskId, userId: this.userId },
+      data: { text: text.trim() },
     });
+
+    if (updated.count === 0) {
+      throw new Error('Task not found or access denied');
+    }
+
+    // Return the updated task
+    const task = await prisma.taskListItem.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    return task;
   }
 
   /**
    * Mark task as completed
    */
   async completeTask(taskId: string) {
-    return this.ensureOwnership(taskId, async () => {
-      return prisma.taskListItem.update({
-        where: { id: taskId },
-        data: {
-          completed: true,
-          completedAt: new Date(),
-        },
-      });
+    // Use atomic operation with userId in where clause to prevent race conditions
+    const updated = await prisma.taskListItem.updateMany({
+      where: { id: taskId, userId: this.userId },
+      data: {
+        completed: true,
+        completedAt: new Date(),
+      },
     });
+
+    if (updated.count === 0) {
+      throw new Error('Task not found or access denied');
+    }
+
+    // Return the updated task
+    const task = await prisma.taskListItem.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    return task;
   }
 
   /**
    * Delete a task
    */
   async deleteTask(taskId: string) {
-    return this.ensureOwnership(taskId, async () => {
-      return prisma.taskListItem.delete({
-        where: { id: taskId },
-      });
-    });
-  }
-
-  /**
-   * Security: Ensure user owns task before operations
-   */
-  private async ensureOwnership<T>(
-    taskId: string,
-    operation: () => Promise<T>
-  ): Promise<T> {
-    const task = await prisma.taskListItem.findFirst({
+    // Use atomic operation with userId in where clause to prevent race conditions
+    const deleted = await prisma.taskListItem.deleteMany({
       where: { id: taskId, userId: this.userId },
     });
 
-    if (!task) {
+    if (deleted.count === 0) {
       throw new Error('Task not found or access denied');
     }
 
-    return operation();
+    return { id: taskId };
   }
 
   /**
