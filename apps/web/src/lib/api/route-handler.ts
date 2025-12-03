@@ -15,27 +15,43 @@ export interface RouteContext {
 /**
  * Route handler options
  */
-export interface RouteHandlerOptions<TBody = unknown, TQuery = unknown> {
+export interface RouteHandlerOptions<TBody = never, TQuery = never> {
   requireAuth?: boolean;
   bodySchema?: ZodSchema<TBody>;
   querySchema?: ZodSchema<TQuery>;
 }
 
 /**
- * Validated request data
+ * Conditional type: Include field only if schema is provided
+ * If schema exists, field is required (TData)
+ * If schema doesn't exist, field is not included (never)
  */
-export interface ValidatedRequest<TBody = unknown, TQuery = unknown> {
-  body?: TBody;
-  query?: TQuery;
-  context: RouteContext;
-}
+type ConditionalField<TSchema, TData> = TSchema extends ZodSchema<TData> ? TData : never;
 
 /**
- * Route handler function type
+ * Validated request data with conditional types
+ * - If bodySchema provided → body is TBody (required)
+ * - If no bodySchema → body is never (type error if accessed)
+ * - Same logic for query
  */
-export type RouteHandler<TBody = unknown, TQuery = unknown, TResponse = unknown> = (
-  req: ValidatedRequest<TBody, TQuery>
-) => Promise<TResponse>;
+export type ValidatedRequest<
+  TOptions extends RouteHandlerOptions<any, any>
+> = {
+  context: RouteContext;
+} & (TOptions['bodySchema'] extends ZodSchema<infer TBody>
+  ? { body: TBody }
+  : {}) &
+  (TOptions['querySchema'] extends ZodSchema<infer TQuery>
+    ? { query: TQuery }
+    : {});
+
+/**
+ * Route handler function type with conditional request shape
+ */
+export type RouteHandler<
+  TOptions extends RouteHandlerOptions<any, any>,
+  TResponse = unknown
+> = (req: ValidatedRequest<TOptions>) => Promise<TResponse>;
 
 /**
  * Creates a type-safe, validated API route handler with minimal boilerplate
@@ -46,15 +62,19 @@ export type RouteHandler<TBody = unknown, TQuery = unknown, TResponse = unknown>
  *   bodySchema: CreateTaskDto,
  *   requireAuth: true,
  * }, async ({ body, context }) => {
+ *   // ✅ body is CreateTaskDto (not optional!)
  *   const service = createTaskListService(context.userId);
  *   const task = await service.createTask(body.text);
  *   return { success: true, task };
  * });
  * ```
  */
-export function createRouteHandler<TBody = unknown, TQuery = unknown, TResponse = unknown>(
-  options: RouteHandlerOptions<TBody, TQuery>,
-  handler: RouteHandler<TBody, TQuery, TResponse>
+export function createRouteHandler<
+  TOptions extends RouteHandlerOptions<any, any>,
+  TResponse = unknown
+>(
+  options: TOptions,
+  handler: RouteHandler<TOptions, TResponse>
 ) {
   return async (
     request: NextRequest,
@@ -69,7 +89,7 @@ export function createRouteHandler<TBody = unknown, TQuery = unknown, TResponse 
       }
 
       // 2. Parse and validate query parameters
-      let query: TQuery | undefined;
+      let query: any;
       if (options.querySchema) {
         const searchParams = request.nextUrl.searchParams;
         const queryObject = Object.fromEntries(searchParams.entries());
@@ -77,7 +97,7 @@ export function createRouteHandler<TBody = unknown, TQuery = unknown, TResponse 
       }
 
       // 3. Parse and validate request body
-      let body: TBody | undefined;
+      let body: any;
       if (options.bodySchema) {
         const rawBody = await request.json();
         body = options.bodySchema.parse(rawBody);
@@ -89,10 +109,19 @@ export function createRouteHandler<TBody = unknown, TQuery = unknown, TResponse 
         params: routeParams?.params,
       };
 
-      // 5. Execute handler
-      const result = await handler({ body, query, context });
+      // 5. Build request object with only the fields that have schemas
+      const validatedRequest: any = { context };
+      if (options.bodySchema) {
+        validatedRequest.body = body;
+      }
+      if (options.querySchema) {
+        validatedRequest.query = query;
+      }
 
-      // 6. Return success response
+      // 6. Execute handler
+      const result = await handler(validatedRequest);
+
+      // 7. Return success response
       return NextResponse.json(result);
     } catch (error) {
       return handleRouteError(error);
@@ -145,9 +174,12 @@ function handleRouteError(error: unknown): NextResponse {
 /**
  * Helper to create authenticated route handlers (sugar for requireAuth: true)
  */
-export function createAuthenticatedHandler<TBody = unknown, TQuery = unknown, TResponse = unknown>(
-  options: Omit<RouteHandlerOptions<TBody, TQuery>, 'requireAuth'>,
-  handler: RouteHandler<TBody, TQuery, TResponse>
+export function createAuthenticatedHandler<
+  TOptions extends RouteHandlerOptions<any, any>,
+  TResponse = unknown
+>(
+  options: TOptions,
+  handler: RouteHandler<TOptions, TResponse>
 ) {
   return createRouteHandler({ ...options, requireAuth: true }, handler);
 }

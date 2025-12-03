@@ -11,19 +11,20 @@ import {
  * GET /api/tasks
  * List all tasks for the authenticated user
  */
-export const GET = createAuthenticatedHandler<never, GetTasksQueryDto, TaskListResponseDto>(
+export const GET = createAuthenticatedHandler(
   {
     querySchema: GetTasksQueryDto,
   },
   async ({ query, context }) => {
     const service = createTaskListService(context.userId);
-    const tasks = await service.getTasks({ includeCompleted: query?.includeCompleted });
+    // ✅ query is guaranteed to be present (no optional chaining needed)
+    const tasks = await service.getTasks({ includeCompleted: query.includeCompleted });
 
     return {
       success: true,
       tasks,
       total: tasks.length,
-    };
+    } satisfies TaskListResponseDto;
   }
 );
 
@@ -31,17 +32,18 @@ export const GET = createAuthenticatedHandler<never, GetTasksQueryDto, TaskListR
  * POST /api/tasks
  * Create a new task
  */
-export const POST = createAuthenticatedHandler<CreateTaskDto, never, TaskResponseDto>(
+export const POST = createAuthenticatedHandler(
   {
     bodySchema: CreateTaskDto,
   },
   async ({ body, context }) => {
     const service = createTaskListService(context.userId);
-    const task = await service.createTask(body!.text);
+    // ✅ body is guaranteed to be present (no ! operator needed)
+    const task = await service.createTask(body.text);
 
     return {
       success: true,
       task,
-    };
+    } satisfies TaskResponseDto;
   }
 );
