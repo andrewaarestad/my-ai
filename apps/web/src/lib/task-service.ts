@@ -1,23 +1,27 @@
 import { prisma } from './prisma';
+import { UserScopedService } from './services/base-service';
 import type { Prisma } from '@prisma/client';
 
-export class TaskListService {
-  constructor(private userId: string) {}
-
+/**
+ * Task List Service - User-scoped access to tasks
+ *
+ * Provides secure access to user's task list.
+ * All queries are automatically filtered by userId.
+ */
+export class TaskListService extends UserScopedService {
   /**
    * Get all tasks for the user
    */
   async getTasks(options: { includeCompleted?: boolean } = {}) {
     const { includeCompleted = false } = options;
 
-    const where: Prisma.TaskListItemWhereInput = {
-      userId: this.userId,
-      ...(includeCompleted ? {} : { completed: false }),
-    };
+    const where: Prisma.TaskListItemWhereInput = this.enforceUserScope(
+      includeCompleted ? {} : { completed: false }
+    );
 
     return prisma.taskListItem.findMany({
       where,
-      orderBy: { order: 'asc' },
+      orderBy: [{ completed: 'asc' }, { order: 'asc' }],
     });
   }
 
@@ -34,7 +38,7 @@ export class TaskListService {
     return prisma.taskListItem.create({
       data: {
         text: text.trim(),
-        userId: this.userId,
+        userId: this.getUserId(),
         order: maxOrder + 1,
       },
     });
@@ -50,7 +54,7 @@ export class TaskListService {
 
     // Use atomic operation with userId in where clause to prevent race conditions
     const updated = await prisma.taskListItem.updateMany({
-      where: { id: taskId, userId: this.userId },
+      where: this.enforceUserScope({ id: taskId }),
       data: { text: text.trim() },
     });
 
@@ -59,8 +63,8 @@ export class TaskListService {
     }
 
     // Return the updated task
-    const task = await prisma.taskListItem.findUnique({
-      where: { id: taskId },
+    const task = await prisma.taskListItem.findFirst({
+      where: this.enforceUserScope({ id: taskId }),
     });
 
     if (!task) {
@@ -76,7 +80,7 @@ export class TaskListService {
   async completeTask(taskId: string) {
     // Use atomic operation with userId in where clause to prevent race conditions
     const updated = await prisma.taskListItem.updateMany({
-      where: { id: taskId, userId: this.userId },
+      where: this.enforceUserScope({ id: taskId }),
       data: {
         completed: true,
         completedAt: new Date(),
@@ -88,8 +92,8 @@ export class TaskListService {
     }
 
     // Return the updated task
-    const task = await prisma.taskListItem.findUnique({
-      where: { id: taskId },
+    const task = await prisma.taskListItem.findFirst({
+      where: this.enforceUserScope({ id: taskId }),
     });
 
     if (!task) {
@@ -105,7 +109,7 @@ export class TaskListService {
   async deleteTask(taskId: string) {
     // Use atomic operation with userId in where clause to prevent race conditions
     const deleted = await prisma.taskListItem.deleteMany({
-      where: { id: taskId, userId: this.userId },
+      where: this.enforceUserScope({ id: taskId }),
     });
 
     if (deleted.count === 0) {
@@ -120,7 +124,7 @@ export class TaskListService {
    */
   private async getMaxOrder(): Promise<number> {
     const result = await prisma.taskListItem.aggregate({
-      where: { userId: this.userId },
+      where: this.enforceUserScope({}),
       _max: { order: true },
     });
     return result._max.order ?? 0;

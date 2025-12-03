@@ -51,6 +51,18 @@ const ENV_VARS: EnvVarConfig[] = [
     description: 'Direct PostgreSQL connection for migrations',
     exampleValue: 'postgresql://user:password@host:5432/database',
   },
+  {
+    name: 'ENCRYPTION_KEY',
+    required: true,
+    description: 'AES-256 encryption key for OAuth tokens (32 bytes, base64-encoded)',
+    exampleValue: 'Generate with: openssl rand -base64 32',
+  },
+  {
+    name: 'CRON_SECRET',
+    required: true,
+    description: 'Secret key for authenticating cron job requests (minimum 32 characters)',
+    exampleValue: 'Generate with: openssl rand -base64 32',
+  },
 ];
 
 class EnvironmentValidationError extends Error {
