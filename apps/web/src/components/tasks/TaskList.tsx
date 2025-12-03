@@ -77,7 +77,7 @@ export function TaskList({ initialTasks }: Props) {
   const handleNewTaskKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleCreateTask(newTaskText);
+      void handleCreateTask(newTaskText);
       // Keep input active for rapid entry
       setTimeout(() => {
         setIsCreating(true);
@@ -91,7 +91,7 @@ export function TaskList({ initialTasks }: Props) {
 
   const handleNewTaskBlur = () => {
     if (newTaskText.trim().length > 0) {
-      handleCreateTask(newTaskText);
+      void handleCreateTask(newTaskText);
     } else {
       setIsCreating(false);
       setNewTaskText('');
@@ -107,8 +107,8 @@ export function TaskList({ initialTasks }: Props) {
               key={task.id}
               task={task}
               isLast={index === tasks.length - 1 && !isCreating}
-              onComplete={handleComplete}
-              onUpdate={handleUpdate}
+              onComplete={(id) => void handleComplete(id)}
+              onUpdate={(id, text) => void handleUpdate(id, text)}
               onEnterOnLast={handleEnterOnLast}
             />
           ))}

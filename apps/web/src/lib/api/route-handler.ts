@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z, ZodSchema } from 'zod';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
+import type { ZodSchema } from 'zod';
+import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { logError } from '@/lib/error-logger';
 import { ApiError, UnauthorizedError } from './errors';
@@ -22,33 +24,28 @@ export interface RouteHandlerOptions<TBody = never, TQuery = never> {
 }
 
 /**
- * Conditional type: Include field only if schema is provided
- * If schema exists, field is required (TData)
- * If schema doesn't exist, field is not included (never)
- */
-type ConditionalField<TSchema, TData> = TSchema extends ZodSchema<TData> ? TData : never;
-
-/**
  * Validated request data with conditional types
  * - If bodySchema provided → body is TBody (required)
  * - If no bodySchema → body is never (type error if accessed)
  * - Same logic for query
  */
 export type ValidatedRequest<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TOptions extends RouteHandlerOptions<any, any>
 > = {
   context: RouteContext;
 } & (TOptions['bodySchema'] extends ZodSchema<infer TBody>
   ? { body: TBody }
-  : {}) &
+  : Record<string, never>) &
   (TOptions['querySchema'] extends ZodSchema<infer TQuery>
     ? { query: TQuery }
-    : {});
+    : Record<string, never>);
 
 /**
  * Route handler function type with conditional request shape
  */
 export type RouteHandler<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TOptions extends RouteHandlerOptions<any, any>,
   TResponse = unknown
 > = (req: ValidatedRequest<TOptions>) => Promise<TResponse>;
@@ -70,6 +67,7 @@ export type RouteHandler<
  * ```
  */
 export function createRouteHandler<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TOptions extends RouteHandlerOptions<any, any>,
   TResponse = unknown
 >(
@@ -78,7 +76,7 @@ export function createRouteHandler<
 ) {
   return async (
     request: NextRequest,
-    routeParams?: { params: Record<string, string> }
+    routeParams?: { params: Promise<Record<string, string>> | Record<string, string> }
   ): Promise<NextResponse> => {
     try {
       // 1. Authentication
@@ -89,7 +87,7 @@ export function createRouteHandler<
       }
 
       // 2. Parse and validate query parameters
-      let query: any;
+      let query: unknown;
       if (options.querySchema) {
         const searchParams = request.nextUrl.searchParams;
         const queryObject = Object.fromEntries(searchParams.entries());
@@ -97,28 +95,38 @@ export function createRouteHandler<
       }
 
       // 3. Parse and validate request body
-      let body: any;
+      let body: unknown;
       if (options.bodySchema) {
-        const rawBody = await request.json();
+        const rawBody: unknown = await request.json();
         body = options.bodySchema.parse(rawBody);
       }
 
-      // 4. Build context
+      // 4. Build context (await params if they're a Promise - Next.js 16+)
+      const resolvedParams = routeParams?.params
+        ? routeParams.params instanceof Promise
+          ? await routeParams.params
+          : routeParams.params
+        : undefined;
+
       const context: RouteContext = {
         userId: session?.user?.id || '',
-        params: routeParams?.params,
+        params: resolvedParams,
       };
 
       // 5. Build request object with only the fields that have schemas
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
       const validatedRequest: any = { context };
       if (options.bodySchema) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         validatedRequest.body = body;
       }
       if (options.querySchema) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         validatedRequest.query = query;
       }
 
       // 6. Execute handler
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const result = await handler(validatedRequest);
 
       // 7. Return success response
@@ -135,11 +143,12 @@ export function createRouteHandler<
 function handleRouteError(error: unknown): NextResponse {
   // Zod validation errors
   if (error instanceof z.ZodError) {
+    const zodError: z.ZodError = error;
     void logError('Validation error', { error });
     return NextResponse.json(
       {
         error: 'Validation failed',
-        issues: error.errors.map((err) => ({
+        issues: zodError.issues.map((err: z.ZodIssue) => ({
           path: err.path.join('.'),
           message: err.message,
         })),
@@ -175,6 +184,7 @@ function handleRouteError(error: unknown): NextResponse {
  * Helper to create authenticated route handlers (sugar for requireAuth: true)
  */
 export function createAuthenticatedHandler<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TOptions extends RouteHandlerOptions<any, any>,
   TResponse = unknown
 >(

@@ -1,4 +1,4 @@
-import { z, ZodSchema } from 'zod';
+import type { ZodSchema } from 'zod';
 
 /**
  * API client error
@@ -38,14 +38,15 @@ export async function apiRequest<T>(
   const response = await fetch(url, fetchOptions);
 
   // Parse response
-  const data = await response.json();
+  const data: unknown = await response.json();
 
   // Handle errors
   if (!response.ok) {
+    const errorData = data as { error?: string; issues?: Array<{ path: string; message: string }> };
     throw new ApiClientError(
-      data.error || 'Request failed',
+      errorData.error ?? 'Request failed',
       response.status,
-      data.issues
+      errorData.issues
     );
   }
 
