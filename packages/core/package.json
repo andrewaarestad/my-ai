@@ -1,0 +1,29 @@
+{
+  "name": "@my-ai/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./db": "./src/db/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "google-auth-library": "^9.15.1",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@my-ai/eslint-config": "workspace:*",
+    "@my-ai/typescript-config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.3"
+  }
+}
