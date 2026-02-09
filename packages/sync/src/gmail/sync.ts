@@ -32,6 +32,7 @@ export class GmailSyncService {
       let synced = 0;
       let errors = 0;
       let pageToken: string | undefined;
+      let latestHistoryId: string | null = null;
 
       const syncQuery = isInitialSync ? query || "newer_than:30d" : query;
 
@@ -61,6 +62,13 @@ export class GmailSyncService {
             await this.storeMessage(parsed);
             synced++;
 
+            // Track the latest historyId for incremental sync
+            if (parsed.historyId) {
+              if (!latestHistoryId || parsed.historyId > latestHistoryId) {
+                latestHistoryId = parsed.historyId;
+              }
+            }
+
             if (verbose && synced % 10 === 0) {
               console.error(`Synced ${synced} messages...`);
             }
@@ -77,6 +85,7 @@ export class GmailSyncService {
       await this.updateSyncState({
         isSyncing: false,
         lastSyncedAt: new Date(),
+        ...(latestHistoryId && { historyId: latestHistoryId }),
       });
 
       return { synced, errors };
@@ -319,10 +328,27 @@ export class GmailSyncService {
             }
           }
 
+          // Handle label changes - collect all unique message IDs
           if (record.labelsAdded || record.labelsRemoved) {
-            const messageId =
-              record.labelsAdded?.[0]?.message?.id || record.labelsRemoved?.[0]?.message?.id;
-            if (messageId) {
+            const messageIds = new Set<string>();
+
+            if (record.labelsAdded) {
+              for (const item of record.labelsAdded) {
+                if (item.message?.id) {
+                  messageIds.add(item.message.id);
+                }
+              }
+            }
+
+            if (record.labelsRemoved) {
+              for (const item of record.labelsRemoved) {
+                if (item.message?.id) {
+                  messageIds.add(item.message.id);
+                }
+              }
+            }
+
+            for (const messageId of messageIds) {
               try {
                 const fullMessage = await this.gmailClient.getMessage(messageId);
                 const parsed = this.gmailClient.parseMessage(fullMessage);
