@@ -25,11 +25,12 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate || echo 'Skipping Prisma generation (DATABASE_URL not set)'",
-    "auth:google": "tsx scripts/auth-google.ts",
+    "auth:google": "tsx -r dotenv/config scripts/auth-google.ts",
     "sync:gmail": "tsx scripts/sync-gmail.ts",
     "data:search": "tsx scripts/search.ts"
   },
   "devDependencies": {
+    "dotenv": "^17.2.4",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "prisma": "^6.19.0",

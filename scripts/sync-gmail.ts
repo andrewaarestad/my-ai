@@ -92,10 +92,14 @@ async function main() {
     console.error(`Total messages in account: ${profile.messagesTotal}`);
   }
 
-  // For CLI use, we use a single-user model with a fixed userId
-  // In a real multi-user setup, this would come from auth
-  const userId = "cli-user";
+  // For CLI use, ensure a user record exists for this email
   const accountEmail = profile.emailAddress;
+  const user = await prisma.user.upsert({
+    where: { email: accountEmail },
+    create: { email: accountEmail, name: accountEmail },
+    update: {},
+  });
+  const userId = user.id;
 
   const syncService = createGmailSyncService(userId, accountEmail, gmailClient);
 
