@@ -40,7 +40,86 @@ Please analyze this PR and all its comments. Look for:
 3. Requested changes from code reviews
 4. Questions that need responses
 
-Use `gh pr view` and the GitHub API to get comprehensive data about all comment types. 
+**IMPORTANT**: Review threads can contain multiple comments. You must iterate through ALL comments in each thread, not just the first one.
+
+Use the GitHub GraphQL API to get comprehensive data about all comment types. Start by getting the repository owner and name:
+
+```bash
+# Get repo info
+REPO_INFO=$(gh repo view --json owner,name)
+OWNER=$(echo $REPO_INFO | jq -r '.owner.login')
+REPO=$(echo $REPO_INFO | jq -r '.name')
+PR_NUMBER=$(gh pr view --json number -q '.number')
+```
+
+**Step 1: First, get the count of unresolved threads to validate completeness:**
+
+```bash
+# Get total count of unresolved review threads
+gh api graphql -f query="
+query {
+  repository(owner: \"$OWNER\", name: \"$REPO\") {
+    pullRequest(number: $PR_NUMBER) {
+      reviewThreads(first: 100) {
+        totalCount
+        nodes {
+          id
+          isResolved
+        }
+      }
+    }
+  }
+}" --jq '.data.repository.pullRequest.reviewThreads | {totalCount, unresolvedCount: [.nodes[] | select(.isResolved == false)] | length}'
+```
+
+This will show you the total number of threads and how many are unresolved. **Remember this number** - you must fetch exactly this many threads.
+
+**Step 2: Fetch all unresolved review comments:**
+
+```bash
+# Get ALL unresolved review thread comments
+gh api graphql -f query="
+query {
+  repository(owner: \"$OWNER\", name: \"$REPO\") {
+    pullRequest(number: $PR_NUMBER) {
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          isOutdated
+          comments(first: 50) {
+            nodes {
+              id
+              body
+              author { login }
+              path
+              line
+              diffHunk
+            }
+          }
+        }
+      }
+    }
+  }
+}" --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)'
+```
+
+**Step 3: VALIDATE COMPLETENESS - CRITICAL**
+
+Before proceeding, you MUST verify that you received ALL unresolved threads:
+
+1. Count how many thread objects you received in Step 2
+2. Compare to the `unresolvedCount` from Step 1
+3. **If the numbers don't match**, the output was truncated. You MUST use an alternative approach:
+   - Save the full output to a temporary file instead of piping to jq
+   - Or fetch threads in smaller batches
+   - Or simplify the output format to avoid truncation
+4. **Do not proceed to Phase 1.2** until you have confirmed you have ALL unresolved threads
+
+**If you see any truncation warnings or "... [N lines truncated] ..." messages, STOP and re-fetch the data using a different method.**
+
+This will return all unresolved threads with ALL their comments. Process each thread and iterate through the comments array to capture every comment.
+
 Group the items by type (code changes, documentation, responses to questions).
 
 #### Phase 1.2: Filtering
@@ -103,13 +182,23 @@ Now implement the solutions for each item in the plan:
 
 After addressing all items:
 
-1. Mark all review threads as resolved using the GitHub API
-2. Verify that all conversations show as resolved
+1. Mark all comments as resolved using the GitHub API
+2. **CRITICAL: Verify that all conversations show as resolved** by running:
+   ```bash
+   gh api graphql -f query="..." --jq '.data.repository.pullRequest.reviewThreads | {totalCount, unresolvedCount: [.nodes[] | select(.isResolved == false)] | length}'
+   ```
+   The `unresolvedCount` must be 0 before proceeding.
 3. Create a summary of all changes made
 4. Commit the changes with a clear message
 5. Push the commit to GitHub
+6. Create an ultra-concise summary of the changes made, including issues marked as "will-not-fix" and issues fixed. Post it as a comment on the main PR conversation.
 
-This workflow is complete when the changes have been committed and pushed.
+**This workflow is ONLY complete when:**
+- All changes have been committed and pushed
+- The final verification shows `unresolvedCount: 0`
+- A summary comment has been posted to the PR
+
+**If unresolvedCount is not 0, you MUST investigate which threads were missed and address them before completing.**
 
 ## Appendix 1: Using GitHub CLI Commands
 
@@ -117,41 +206,75 @@ Since Claude will see the full PR context, including any comments, you can use t
 
 ```
 # View current PR with comments
-gh pr view -comments
+gh pr view --comments
 
-# Get comprehensive PR data
-gh pr view -json reviews,reviewThreads, comments
+# Get repo and PR info for GraphQL queries
+REPO_INFO=$(gh repo view --json owner,name)
+OWNER=$(echo $REPO_INFO | jq -r '.owner.login')
+REPO=$(echo $REPO_INFO | jq -r '.name')
+PR_NUMBER=$(gh pr view --json number -q '.number')
 
-# Use GraphQL for review thread status
-gh api graphql -f query='
-    query($owner: String!, $repo: String!, $pr: Int!) {
-        repository (owner: $owner, name: $repo) {
-            pullRequest (number: $pr) {
-                reviewThreads (first: 100) {
-                    nodes {
-                        id 
-                        isResolved
-                        comments (first: 50) {
-                            nodes {
-                                body
-                                author { login }
-                            }
-                        }
-                    }
-                }
+# STEP 1: Get count of unresolved threads (for validation)
+gh api graphql -f query="
+query {
+  repository(owner: \"$OWNER\", name: \"$REPO\") {
+    pullRequest(number: $PR_NUMBER) {
+      reviewThreads(first: 100) {
+        totalCount
+        nodes {
+          id
+          isResolved
+        }
+      }
+    }
+  }
+}" --jq '.data.repository.pullRequest.reviewThreads | {totalCount, unresolvedCount: [.nodes[] | select(.isResolved == false)] | length}'
+
+# STEP 2: Get ALL unresolved review threads with ALL comments in each thread
+gh api graphql -f query="
+query {
+  repository(owner: \"$OWNER\", name: \"$REPO\") {
+    pullRequest(number: $PR_NUMBER) {
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          isOutdated
+          comments(first: 50) {
+            nodes {
+              id
+              body
+              author { login }
+              path
+              line
+              diffHunk
             }
+          }
         }
+      }
     }
-'
+  }
+}" --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)'
 
-# Use GraphQL API to Resolve review threads
+# STEP 3: ALWAYS verify you received the exact number of threads from Step 1
+# If numbers don't match, output was truncated - use alternative fetching method
+
+# Resolve a specific review thread by ID
 gh api graphql -f query='
-    mutation ($threadId: ID!) {
-        resolveReviewThread(input: {threadId: $threadId}) {
-            thread { isResolved }
-        }
-    }
-'
+mutation ($threadId: ID!) {
+  resolveReviewThread(input: {threadId: $threadId}) {
+    thread { isResolved }
+  }
+}' -f threadId="THREAD_ID_HERE"
+
+# Post a comment on the PR conversation
+gh pr comment 42 --body "$(cat <<EOF
+Addressed comments on this PR, made the following changes:
+
+* fixed typo in index.js
+* etc...
+EOF
+)"
 ```
 
 ## Appendix 2: Hypothetical Command Outcome/Pattern
