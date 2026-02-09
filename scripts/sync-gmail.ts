@@ -39,7 +39,12 @@ function parseArgs(): CliOptions {
     } else if (arg === "--format=json") {
       options.format = "json";
     } else if (arg.startsWith("--limit=")) {
-      options.limit = parseInt(arg.split("=")[1] ?? "100", 10);
+      const parsed = parseInt(arg.split("=")[1] ?? "100", 10);
+      if (isNaN(parsed) || parsed <= 0) {
+        console.error(`Error: --limit must be a positive number, got "${arg.split("=")[1]}"`);
+        process.exit(1);
+      }
+      options.limit = parsed;
     } else if (arg.startsWith("--query=")) {
       options.query = arg.split("=").slice(1).join("=");
     } else if (arg === "--help" || arg === "-h") {
@@ -109,7 +114,7 @@ async function main() {
     if (options.verbose) {
       console.error("Performing incremental sync...");
     }
-    result = await syncService.incrementalSync({ verbose: options.verbose });
+    result = await syncService.incrementalSync({ verbose: options.verbose, maxMessages: options.limit });
   }
 
   // Output result

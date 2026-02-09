@@ -64,7 +64,12 @@ Examples:
     if (arg.startsWith("--source=")) {
       options.source = arg.split("=")[1];
     } else if (arg.startsWith("--limit=")) {
-      options.limit = parseInt(arg.split("=")[1] ?? "20", 10);
+      const parsed = parseInt(arg.split("=")[1] ?? "20", 10);
+      if (isNaN(parsed) || parsed <= 0) {
+        console.error(`Error: --limit must be a positive number, got "${arg.split("=")[1]}"`);
+        process.exit(1);
+      }
+      options.limit = parsed;
     } else if (arg === "--format=json") {
       options.format = "json";
     }

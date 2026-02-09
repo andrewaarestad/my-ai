@@ -64,7 +64,7 @@ export class GmailSyncService {
 
             // Track the latest historyId for incremental sync
             if (parsed.historyId) {
-              if (!latestHistoryId || parsed.historyId > latestHistoryId) {
+              if (!latestHistoryId || BigInt(parsed.historyId) > BigInt(latestHistoryId)) {
                 latestHistoryId = parsed.historyId;
               }
             }
@@ -140,6 +140,13 @@ export class GmailSyncService {
     const isSent = labelIds.includes("SENT");
     const isTrash = labelIds.includes("TRASH");
 
+    const existingThread = await prisma.gmailThread.findUnique({
+      where: { id: threadId },
+      select: { lastMessageDate: true },
+    });
+
+    const shouldUpdateDate = !existingThread || date > existingThread.lastMessageDate;
+
     await prisma.gmailThread.upsert({
       where: { id: threadId },
       create: {
@@ -157,7 +164,8 @@ export class GmailSyncService {
       update: {
         subject: subject || "(No subject)",
         snippet: snippet || "",
-        lastMessageDate: date,
+        ...(shouldUpdateDate && { lastMessageDate: date }),
+        messageCount: { increment: 1 },
         hasUnread: !isRead,
         isStarred,
         isImportant,
@@ -276,15 +284,15 @@ export class GmailSyncService {
     });
   }
 
-  async incrementalSync(options: { verbose?: boolean } = {}): Promise<SyncResult> {
-    const { verbose = false } = options;
+  async incrementalSync(options: { verbose?: boolean; maxMessages?: number } = {}): Promise<SyncResult> {
+    const { verbose = false, maxMessages = 100 } = options;
     const syncState = await this.getSyncState();
 
     if (!syncState?.historyId) {
       if (verbose) {
         console.error("No history ID found, performing initial sync...");
       }
-      return this.syncMessages({ maxMessages: 500, isInitialSync: true, verbose });
+      return this.syncMessages({ maxMessages, isInitialSync: true, verbose });
     }
 
     try {

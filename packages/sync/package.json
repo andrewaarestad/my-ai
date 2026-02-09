@@ -22,6 +22,7 @@
     "@my-ai/eslint-config": "workspace:*",
     "@my-ai/typescript-config": "workspace:*",
     "@types/node": "^22.10.0",
+    "eslint": "^8.57.1",
     "typescript": "^5.6.3"
   }
 }

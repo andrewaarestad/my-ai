@@ -162,6 +162,14 @@ function waitForAuthCode(): Promise<string> {
       }
     );
 
+    server.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        reject(new Error(`Port ${REDIRECT_PORT} is already in use. Please close the other process and try again.`));
+      } else {
+        reject(new Error(`Failed to start auth server: ${err.message}`));
+      }
+    });
+
     server.listen(REDIRECT_PORT, () => {
       console.log(`Waiting for authentication callback on port ${REDIRECT_PORT}...`);
     });
