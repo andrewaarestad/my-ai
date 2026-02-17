@@ -49,22 +49,6 @@ export default async function Dashboard() {
             </Link>
           </div>
 
-          {/* Connected Accounts */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              Connected Accounts
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Manage your linked OAuth accounts
-            </p>
-            <Link
-              href="/dashboard/accounts"
-              className="inline-block rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-purple-700"
-            >
-              Manage Accounts
-            </Link>
-          </div>
-
           {/* AI Agents */}
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
             <h2 className="text-2xl font-semibold text-white mb-3">
