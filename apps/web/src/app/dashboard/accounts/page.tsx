@@ -3,13 +3,21 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import Link from "next/link";
+import { LinkAccountButton } from "./link-account-button";
+import { UnlinkAccountButton } from "./unlink-account-button";
 
-export default async function AccountsPage() {
+interface Props {
+  searchParams: Promise<{ linked?: string; link_error?: string }>;
+}
+
+export default async function AccountsPage({ searchParams }: Props) {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/auth/signin");
   }
+
+  const params = await searchParams;
 
   const accounts = await prisma.account.findMany({
     where: { userId: session.user.id },
@@ -22,6 +30,16 @@ export default async function AccountsPage() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const successMessage = params.linked === "true"
+    ? "Google account linked successfully."
+    : params.linked === "refreshed"
+      ? "Account tokens refreshed."
+      : null;
+
+  const errorMessage = params.link_error
+    ? LINK_ERROR_MESSAGES[params.link_error] ?? "An unknown error occurred while linking the account."
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -53,6 +71,18 @@ export default async function AccountsPage() {
             </p>
           </div>
 
+          {successMessage && (
+            <div className="mb-6 rounded-lg bg-green-500/20 border border-green-500/30 px-4 py-3 text-green-300 text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="mb-6 rounded-lg bg-red-500/20 border border-red-500/30 px-4 py-3 text-red-300 text-sm">
+              {errorMessage}
+            </div>
+          )}
+
           {accounts.length === 0 ? (
             <div className="bg-white/10 backdrop-blur-lg rounded-lg p-8 border border-white/20 text-center">
               <p className="text-gray-300">
@@ -80,9 +110,17 @@ export default async function AccountsPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-300 border border-green-500/30">
-                      Active
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-300 border border-green-500/30">
+                        Active
+                      </span>
+                      {accounts.length > 1 && (
+                        <UnlinkAccountButton
+                          provider={account.provider}
+                          providerAccountId={account.providerAccountId}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {account.scope && (
@@ -106,6 +144,10 @@ export default async function AccountsPage() {
               ))}
             </div>
           )}
+
+          <div className="mt-8">
+            <LinkAccountButton />
+          </div>
         </div>
       </main>
     </div>
@@ -156,3 +198,14 @@ const SCOPE_LABELS: Record<string, string> = {
 function parseScopeLabels(scope: string): string[] {
   return scope.split(" ").map((s) => SCOPE_LABELS[s] || s);
 }
+
+const LINK_ERROR_MESSAGES: Record<string, string> = {
+  oauth_denied: "You denied the Google authorization request.",
+  missing_params: "OAuth callback was missing required parameters.",
+  expired: "The linking session expired. Please try again.",
+  invalid_cookie: "Invalid linking session. Please try again.",
+  invalid_state: "CSRF validation failed. Please try again.",
+  token_exchange: "Failed to exchange the authorization code with Google.",
+  userinfo_failed: "Failed to retrieve account information from Google.",
+  already_linked_other: "That Google account is already linked to a different user.",
+};
