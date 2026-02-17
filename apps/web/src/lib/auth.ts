@@ -26,6 +26,8 @@ declare module "next-auth" {
 // OAuth tokens are stored in database via Prisma adapter
 const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  // NextAuth v5 reads AUTH_SECRET by default, but our env uses NEXTAUTH_SECRET
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
