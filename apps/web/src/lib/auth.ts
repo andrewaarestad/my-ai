@@ -30,6 +30,10 @@ const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // Safe for Google since emails are verified — allows signing in with
+      // a Google account whose email matches an existing user to auto-link
+      // instead of throwing OAuthAccountNotLinked error.
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           // Request offline access to get refresh token
