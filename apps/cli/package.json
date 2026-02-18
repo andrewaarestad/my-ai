@@ -7,6 +7,8 @@
     "auth:google": "tsx src/auth-google.ts",
     "sync:gmail": "tsx src/sync-gmail.ts",
     "data:search": "tsx src/search.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix"
@@ -21,6 +23,7 @@
     "@types/node": "^22.10.0",
     "eslint": "^8.57.1",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
   }
 }

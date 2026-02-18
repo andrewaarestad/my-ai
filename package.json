@@ -19,7 +19,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,mdx,css,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mdx,css,yml,yaml}\"",
     "clean": "turbo run clean && rm -rf node_modules",
-    "pr-check": "turbo run lint type-check test build",
+    "pr-check": "pnpm format:check && turbo run lint type-check test build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
