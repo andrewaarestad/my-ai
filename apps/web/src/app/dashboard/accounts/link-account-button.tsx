@@ -5,7 +5,7 @@ import { useState } from "react";
 export function LinkAccountButton() {
   const [loading, setLoading] = useState(false);
 
-  async function handleLink() {
+  function handleLink() {
     setLoading(true);
     // POST to the link initiation route — it will redirect to Google OAuth
     const form = document.createElement("form");
@@ -17,7 +17,7 @@ export function LinkAccountButton() {
 
   return (
     <button
-      onClick={handleLink}
+      onClick={() => handleLink()}
       disabled={loading}
       className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white border border-white/20 hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >

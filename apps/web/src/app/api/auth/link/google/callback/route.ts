@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 interface GoogleTokenResponse {
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
   let linkData: { userId: string; state: string; codeVerifier: string };
   try {
-    linkData = JSON.parse(linkCookie.value);
+    linkData = JSON.parse(linkCookie.value) as typeof linkData;
   } catch {
     accountsUrl.searchParams.set("link_error", "invalid_cookie");
     return NextResponse.redirect(accountsUrl.toString());
