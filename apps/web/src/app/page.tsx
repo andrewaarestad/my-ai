@@ -3,6 +3,8 @@ import { SignInButton } from "@/components/auth/SignInButton";
 import { UserAvatar } from "@/components/auth/UserAvatar";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const session = await auth();
 

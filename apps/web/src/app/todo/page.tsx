@@ -5,6 +5,8 @@ import { TaskList } from '@/components/tasks/TaskList';
 import { UserAvatar } from '@/components/auth/UserAvatar';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function TodoPage() {
   const session = await auth();
 

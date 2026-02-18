@@ -4,18 +4,16 @@
  * This is the ONLY file that should read process.env.
  * All other code imports from here.
  *
- * Required vars are validated lazily (on first access). During `next build`,
- * env vars may not be available, so we only throw at runtime (not build time).
+ * Required vars throw on access if not set — the server will crash
+ * immediately on the first request if an env var is missing.
+ * Callers must not access env vars at module level (use lazy init
+ * patterns) so that Next.js can import modules during build without
+ * triggering validation.
  */
-
-const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 
 function required(name: string): string {
   const value = process.env[name];
   if (!value) {
-    if (isBuildPhase) {
-      return "";
-    }
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;
