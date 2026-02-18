@@ -1,12 +1,12 @@
-import { auth } from "@/lib/auth";
-import { SignOutButton } from "./SignOutButton";
-import Image from "next/image";
+import { auth } from '@/lib/auth'
+import { SignOutButton } from './SignOutButton'
+import Image from 'next/image'
 
 export async function UserAvatar() {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user) {
-    return null;
+    return null
   }
 
   return (
@@ -15,7 +15,7 @@ export async function UserAvatar() {
         {session.user.image ? (
           <Image
             src={session.user.image}
-            alt={session.user.name || "User avatar"}
+            alt={session.user.name || 'User avatar'}
             width={40}
             height={40}
             className="rounded-full"
@@ -23,18 +23,16 @@ export async function UserAvatar() {
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-600">
             <span className="text-sm font-semibold text-white">
-              {session.user.name?.[0]?.toUpperCase() || "U"}
+              {session.user.name?.[0]?.toUpperCase() || 'U'}
             </span>
           </div>
         )}
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-white">
-            {session.user.name}
-          </span>
+          <span className="text-sm font-medium text-white">{session.user.name}</span>
           <span className="text-xs text-gray-400">{session.user.email}</span>
         </div>
       </div>
       <SignOutButton />
     </div>
-  );
+  )
 }

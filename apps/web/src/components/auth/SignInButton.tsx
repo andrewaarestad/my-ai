@@ -1,11 +1,11 @@
-import { signIn } from "@/lib/auth";
+import { signIn } from '@/lib/auth'
 
 export function SignInButton() {
   return (
     <form
       action={async () => {
-        "use server";
-        await signIn("google", { redirectTo: "/dashboard" });
+        'use server'
+        await signIn('google', { redirectTo: '/dashboard' })
       }}
     >
       <button
@@ -15,5 +15,5 @@ export function SignInButton() {
         Sign In
       </button>
     </form>
-  );
+  )
 }

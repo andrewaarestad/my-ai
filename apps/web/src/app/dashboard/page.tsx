@@ -1,16 +1,16 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { UserAvatar } from "@/components/auth/UserAvatar";
-import Link from "next/link";
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+import { UserAvatar } from '@/components/auth/UserAvatar'
+import Link from 'next/link'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 export default async function Dashboard() {
-  const session = await auth();
+  const session = await auth()
 
   // Redirect to signin if not authenticated
   if (!session?.user) {
-    redirect("/auth/signin");
+    redirect('/auth/signin')
   }
 
   return (
@@ -28,21 +28,15 @@ export default async function Dashboard() {
 
       <main className="container mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-300">
-            Welcome back, {session.user.name || "User"}!
-          </p>
+          <h1 className="mb-2 text-4xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-300">Welcome back, {session.user.name || 'User'}!</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* My Tasks */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              My Tasks
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Manage your personal task list
-            </p>
+          <div className="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+            <h2 className="mb-3 text-2xl font-semibold text-white">My Tasks</h2>
+            <p className="mb-4 text-gray-300">Manage your personal task list</p>
             <Link
               href="/todo"
               className="inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700"
@@ -52,13 +46,9 @@ export default async function Dashboard() {
           </div>
 
           {/* Connected Accounts */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              Connected Accounts
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Manage your linked OAuth accounts
-            </p>
+          <div className="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+            <h2 className="mb-3 text-2xl font-semibold text-white">Connected Accounts</h2>
+            <p className="mb-4 text-gray-300">Manage your linked OAuth accounts</p>
             <Link
               href="/dashboard/accounts"
               className="inline-block rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-purple-700"
@@ -68,32 +58,24 @@ export default async function Dashboard() {
           </div>
 
           {/* AI Agents */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              AI Agents
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Create and manage your AI agents
-            </p>
+          <div className="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+            <h2 className="mb-3 text-2xl font-semibold text-white">AI Agents</h2>
+            <p className="mb-4 text-gray-300">Create and manage your AI agents</p>
             <button
               disabled
-              className="inline-block rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white opacity-50 cursor-not-allowed"
+              className="inline-block cursor-not-allowed rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white opacity-50"
             >
               Coming Soon
             </button>
           </div>
 
           {/* Data Access */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              Data Access
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Access your Google Calendar, Gmail, and Drive
-            </p>
+          <div className="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+            <h2 className="mb-3 text-2xl font-semibold text-white">Data Access</h2>
+            <p className="mb-4 text-gray-300">Access your Google Calendar, Gmail, and Drive</p>
             <button
               disabled
-              className="inline-block rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white opacity-50 cursor-not-allowed"
+              className="inline-block cursor-not-allowed rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white opacity-50"
             >
               Coming Soon
             </button>
@@ -101,26 +83,21 @@ export default async function Dashboard() {
         </div>
 
         {/* User Info Section */}
-        <div className="mt-8 bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-          <h2 className="text-xl font-semibold text-white mb-4">
-            Your Profile
-          </h2>
+        <div className="mt-8 rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+          <h2 className="mb-4 text-xl font-semibold text-white">Your Profile</h2>
           <div className="space-y-2 text-gray-300">
             <p>
-              <span className="font-medium text-white">Name:</span>{" "}
-              {session.user.name}
+              <span className="font-medium text-white">Name:</span> {session.user.name}
             </p>
             <p>
-              <span className="font-medium text-white">Email:</span>{" "}
-              {session.user.email}
+              <span className="font-medium text-white">Email:</span> {session.user.email}
             </p>
             <p>
-              <span className="font-medium text-white">User ID:</span>{" "}
-              {session.user.id}
+              <span className="font-medium text-white">User ID:</span> {session.user.id}
             </p>
           </div>
         </div>
       </main>
     </div>
-  );
+  )
 }

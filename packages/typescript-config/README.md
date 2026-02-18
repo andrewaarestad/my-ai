@@ -22,6 +22,7 @@ In your package's `tsconfig.json`:
 ## Available Configs
 
 ### Next.js Apps
+
 ```json
 {
   "extends": "@my-ai/typescript-config/nextjs.json"
@@ -29,6 +30,7 @@ In your package's `tsconfig.json`:
 ```
 
 ### React Libraries
+
 ```json
 {
   "extends": "@my-ai/typescript-config/react-library.json"
@@ -36,6 +38,7 @@ In your package's `tsconfig.json`:
 ```
 
 ### Node.js Services
+
 ```json
 {
   "extends": "@my-ai/typescript-config/node.json"

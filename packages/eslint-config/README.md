@@ -16,44 +16,49 @@ In your package's `.eslintrc.js`:
 ```javascript
 module.exports = {
   root: true,
-  extends: ['@my-ai/eslint-config/nextjs']
+  extends: ['@my-ai/eslint-config/nextjs'],
 }
 ```
 
 ## Available Configs
 
 ### Next.js Apps
+
 ```javascript
 module.exports = {
   root: true,
-  extends: ['@my-ai/eslint-config/nextjs']
+  extends: ['@my-ai/eslint-config/nextjs'],
 }
 ```
 
 ### React Libraries
+
 ```javascript
 module.exports = {
   root: true,
-  extends: ['@my-ai/eslint-config/react-library']
+  extends: ['@my-ai/eslint-config/react-library'],
 }
 ```
 
 ### Node.js Services
+
 ```javascript
 module.exports = {
   root: true,
-  extends: ['@my-ai/eslint-config/node']
+  extends: ['@my-ai/eslint-config/node'],
 }
 ```
 
 ## Linting
 
 Run lint:
+
 ```bash
 pnpm lint
 ```
 
 Auto-fix issues:
+
 ```bash
 pnpm lint:fix
 ```

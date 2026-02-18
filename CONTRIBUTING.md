@@ -94,6 +94,7 @@ type(scope): description
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -401,6 +402,7 @@ pnpm type-check
 ## Questions?
 
 If you have questions or need help, please:
+
 1. Check this guide
 2. Review agent instructions in `.claude/instructions/`
 3. Search existing issues

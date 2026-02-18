@@ -1,18 +1,18 @@
-'use client';
+'use client'
 
-import { Component, type ReactNode } from 'react';
-import { logError } from '@/lib/error-logger';
-import { env } from '@/lib/environment';
+import { Component, type ReactNode } from 'react'
+import { logError } from '@/lib/error-logger'
+import { env } from '@/lib/environment'
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
+  children: ReactNode
+  fallback?: ReactNode
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: { componentStack?: string } | null;
+  hasError: boolean
+  error: Error | null
+  errorInfo: { componentStack?: string } | null
 }
 
 /**
@@ -21,24 +21,21 @@ interface ErrorBoundaryState {
  * Catches React rendering errors and displays appropriate error UI
  * based on the environment.
  */
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
-    super(props);
+    super(props)
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
-    };
+    }
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return {
       hasError: true,
       error,
-    };
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: { componentStack?: string }): void {
@@ -46,11 +43,11 @@ export class ErrorBoundary extends Component<
     void logError('React Error Boundary caught an error', error, {
       componentStack: errorInfo.componentStack,
       errorType: 'react_rendering',
-    });
+    })
 
     this.setState({
       errorInfo,
-    });
+    })
   }
 
   resetError = (): void => {
@@ -58,26 +55,26 @@ export class ErrorBoundary extends Component<
       hasError: false,
       error: null,
       errorInfo: null,
-    });
-  };
+    })
+  }
 
   render(): ReactNode {
     if (this.state.hasError) {
       // Use custom fallback if provided
       if (this.props.fallback) {
-        return this.props.fallback;
+        return this.props.fallback
       }
 
       // Default error UI
-      const isDetailed = !env.isProduction;
-      const { error, errorInfo } = this.state;
+      const isDetailed = !env.isProduction
+      const { error, errorInfo } = this.state
 
       // Production: Simple error message
       if (!isDetailed) {
         return (
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-            <div className="w-full max-w-md mx-auto p-8">
-              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-6">
+          <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+            <div className="mx-auto w-full max-w-md p-8">
+              <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-6">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
                     <svg
@@ -95,9 +92,7 @@ export class ErrorBoundary extends Component<
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-red-200">
-                      Something went wrong
-                    </h3>
+                    <h3 className="text-lg font-semibold text-red-200">Something went wrong</h3>
                     <p className="mt-2 text-sm text-red-100">
                       We encountered an unexpected error. Please try refreshing the page.
                     </p>
@@ -120,22 +115,23 @@ export class ErrorBoundary extends Component<
               </div>
             </div>
           </div>
-        );
+        )
       }
 
       // Development/Preview: Detailed error information
       return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4">
-          <div className="w-full max-w-4xl mx-auto space-y-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4 py-12">
+          <div className="mx-auto w-full max-w-4xl space-y-4">
             {/* Environment Badge */}
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center rounded-md bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-400 ring-1 ring-inset ring-yellow-500/20">
-                {env.environment.charAt(0).toUpperCase() + env.environment.slice(1)} Environment - Error Boundary
+                {env.environment.charAt(0).toUpperCase() + env.environment.slice(1)} Environment -
+                Error Boundary
               </span>
             </div>
 
             {/* Main Error Card */}
-            <div className="rounded-lg bg-red-500/10 border border-red-500/20 overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-red-500/20 bg-red-500/10">
               <div className="p-6">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
@@ -154,9 +150,7 @@ export class ErrorBoundary extends Component<
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-red-200">
-                      React Rendering Error
-                    </h3>
+                    <h3 className="text-xl font-bold text-red-200">React Rendering Error</h3>
                     <p className="mt-3 text-base text-red-100">
                       An error occurred during component rendering
                     </p>
@@ -167,19 +161,15 @@ export class ErrorBoundary extends Component<
               {/* Error Details */}
               {error && (
                 <div className="border-t border-red-500/20 bg-red-500/5 p-6">
-                  <h4 className="text-sm font-semibold text-red-200 mb-2">
-                    Error Message
-                  </h4>
-                  <pre className="text-sm text-red-100 font-mono overflow-x-auto bg-black/20 p-4 rounded">
+                  <h4 className="mb-2 text-sm font-semibold text-red-200">Error Message</h4>
+                  <pre className="overflow-x-auto rounded bg-black/20 p-4 font-mono text-sm text-red-100">
                     {error.toString()}
                   </pre>
 
                   {error.stack && (
                     <div className="mt-4">
-                      <h4 className="text-sm font-semibold text-red-200 mb-2">
-                        Stack Trace
-                      </h4>
-                      <pre className="text-xs text-red-100 font-mono overflow-x-auto bg-black/20 p-4 rounded max-h-96">
+                      <h4 className="mb-2 text-sm font-semibold text-red-200">Stack Trace</h4>
+                      <pre className="max-h-96 overflow-x-auto rounded bg-black/20 p-4 font-mono text-xs text-red-100">
                         {error.stack}
                       </pre>
                     </div>
@@ -190,10 +180,8 @@ export class ErrorBoundary extends Component<
               {/* Component Stack */}
               {errorInfo?.componentStack && (
                 <div className="border-t border-red-500/20 bg-red-500/5 p-6">
-                  <h4 className="text-sm font-semibold text-red-200 mb-2">
-                    Component Stack
-                  </h4>
-                  <pre className="text-xs text-red-100 font-mono overflow-x-auto bg-black/20 p-4 rounded max-h-96">
+                  <h4 className="mb-2 text-sm font-semibold text-red-200">Component Stack</h4>
+                  <pre className="max-h-96 overflow-x-auto rounded bg-black/20 p-4 font-mono text-xs text-red-100">
                     {errorInfo.componentStack}
                   </pre>
                 </div>
@@ -201,8 +189,8 @@ export class ErrorBoundary extends Component<
             </div>
 
             {/* Troubleshooting */}
-            <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-6">
-              <h4 className="text-sm font-semibold text-blue-200 flex items-center gap-2 mb-3">
+            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-6">
+              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-blue-200">
                 <svg
                   className="h-5 w-5"
                   fill="none"
@@ -221,7 +209,9 @@ export class ErrorBoundary extends Component<
               <ol className="space-y-2">
                 <li className="flex items-start gap-3 text-sm text-blue-100">
                   <span className="flex-shrink-0 font-semibold text-blue-400">1.</span>
-                  <span>Check the component stack above to identify which component threw the error</span>
+                  <span>
+                    Check the component stack above to identify which component threw the error
+                  </span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-blue-100">
                   <span className="flex-shrink-0 font-semibold text-blue-400">2.</span>
@@ -259,9 +249,9 @@ export class ErrorBoundary extends Component<
             </div>
           </div>
         </div>
-      );
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }

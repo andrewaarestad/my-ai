@@ -1,19 +1,19 @@
-import NextAuth from "next-auth";
-import type { DefaultSession } from "next-auth";
-import Google from "next-auth/providers/google";
-import { edgeEnv } from "./environment";
+import NextAuth from 'next-auth'
+import type { DefaultSession } from 'next-auth'
+import Google from 'next-auth/providers/google'
+import { edgeEnv } from './environment'
 
 // Extend the built-in session type (must match auth.ts)
-declare module "next-auth" {
+declare module 'next-auth' {
   interface Session {
     user: {
-      id: string;
-    } & DefaultSession["user"];
+      id: string
+    } & DefaultSession['user']
   }
 
   interface JWT {
-    id?: string;
-    lastTokenRefresh?: number;
+    id?: string
+    lastTokenRefresh?: number
   }
 }
 
@@ -38,7 +38,7 @@ export const { auth } = NextAuth({
   ],
   // Use JWT strategy for Edge runtime compatibility
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
   // Must use same secret as main auth config
   secret: edgeEnv.NEXTAUTH_SECRET,
@@ -46,17 +46,17 @@ export const { auth } = NextAuth({
     // Minimal JWT callback - just pass through the token
     // The main auth.ts adds user.id, but middleware can read it without this callback
     jwt({ token }) {
-      return token;
+      return token
     },
     // Minimal session callback - just pass through the session
     session({ session, token }) {
       // Add user ID if present in token (set by main auth.ts)
       if (session.user && token.id) {
-        session.user.id = token.id as string;
+        session.user.id = token.id as string
       }
-      return session;
+      return session
     },
   },
   // No adapter needed in middleware - JWT sessions don't require DB
   // No events needed - middleware doesn't handle sign-in/sign-out
-});
+})

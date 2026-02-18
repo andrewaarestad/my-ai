@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import type { AuthErrorInfo } from '@/types/auth-errors';
-import { env } from '@/lib/environment';
+import { useState } from 'react'
+import type { AuthErrorInfo } from '@/types/auth-errors'
+import { env } from '@/lib/environment'
 
 interface AuthErrorProps {
-  error: AuthErrorInfo;
-  technicalDetails?: string;
+  error: AuthErrorInfo
+  technicalDetails?: string
 }
 
 /**
@@ -17,9 +17,9 @@ interface AuthErrorProps {
  * - Production: Generic user-friendly error message
  */
 export function AuthError({ error, technicalDetails }: AuthErrorProps) {
-  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const isDetailed = !env.isProduction;
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const isDetailed = !env.isProduction
 
   const copyToClipboard = () => {
     const details = `
@@ -35,17 +35,17 @@ ${error.possibleCauses.map((cause, i) => `${i + 1}. ${cause}`).join('\n')}
 Troubleshooting Steps:
 ${error.troubleshootingSteps.map((step, i) => `${i + 1}. ${step}`).join('\n')}
 ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
-    `.trim();
+    `.trim()
 
-    void navigator.clipboard.writeText(details);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    void navigator.clipboard.writeText(details)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   // Production: Generic error message
   if (!isDetailed) {
     return (
-      <div className="w-full max-w-md mx-auto mt-8 rounded-lg bg-red-500/10 border border-red-500/20 p-6">
+      <div className="mx-auto mt-8 w-full max-w-md rounded-lg border border-red-500/20 bg-red-500/10 p-6">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             <svg
@@ -63,9 +63,7 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-red-200">
-              {error.title}
-            </h3>
+            <h3 className="text-lg font-semibold text-red-200">{error.title}</h3>
             <p className="mt-2 text-sm text-red-100">{error.userMessage}</p>
             <div className="mt-4 flex gap-3">
               <a
@@ -84,16 +82,17 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Development/Preview: Detailed error information
   return (
-    <div className="w-full max-w-3xl mx-auto mt-8 space-y-4">
+    <div className="mx-auto mt-8 w-full max-w-3xl space-y-4">
       {/* Environment Badge */}
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center rounded-md bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-400 ring-1 ring-inset ring-yellow-500/20">
-          {env.environment.charAt(0).toUpperCase() + env.environment.slice(1)} Environment - Detailed Error Display
+          {env.environment.charAt(0).toUpperCase() + env.environment.slice(1)} Environment -
+          Detailed Error Display
         </span>
         <button
           onClick={copyToClipboard}
@@ -108,11 +107,7 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
                 strokeWidth="1.5"
                 stroke="currentColor"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 12.75l6 6 9-13.5"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               Copied!
             </>
@@ -138,7 +133,7 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
       </div>
 
       {/* Main Error Card */}
-      <div className="rounded-lg bg-red-500/10 border border-red-500/20 overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-red-500/20 bg-red-500/10">
         <div className="p-6">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
@@ -158,9 +153,7 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-red-200">{error.title}</h3>
-              <p className="mt-1 text-sm text-red-300 font-mono">
-                Error Code: {error.code}
-              </p>
+              <p className="mt-1 font-mono text-sm text-red-300">Error Code: {error.code}</p>
               <p className="mt-3 text-base text-red-100">{error.userMessage}</p>
             </div>
           </div>
@@ -172,11 +165,9 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
             onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
             className="flex w-full items-center justify-between text-left"
           >
-            <span className="text-sm font-semibold text-red-200">
-              Technical Details
-            </span>
+            <span className="text-sm font-semibold text-red-200">Technical Details</span>
             <svg
-              className={`h-5 w-5 text-red-300 transform transition-transform ${
+              className={`h-5 w-5 transform text-red-300 transition-transform ${
                 showTechnicalDetails ? 'rotate-180' : ''
               }`}
               fill="none"
@@ -184,31 +175,25 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
               strokeWidth="1.5"
               stroke="currentColor"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
 
           {showTechnicalDetails && (
             <div className="mt-4 space-y-4">
               <div>
-                <h4 className="text-xs font-semibold text-red-300 uppercase tracking-wide">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-red-300">
                   Technical Message
                 </h4>
-                <p className="mt-1 text-sm text-red-100 font-mono">
-                  {error.technicalMessage}
-                </p>
+                <p className="mt-1 font-mono text-sm text-red-100">{error.technicalMessage}</p>
               </div>
 
               {technicalDetails && (
                 <div>
-                  <h4 className="text-xs font-semibold text-red-300 uppercase tracking-wide">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-red-300">
                     Additional Details
                   </h4>
-                  <pre className="mt-1 text-xs text-red-100 font-mono overflow-x-auto bg-black/20 p-3 rounded">
+                  <pre className="mt-1 overflow-x-auto rounded bg-black/20 p-3 font-mono text-xs text-red-100">
                     {technicalDetails}
                   </pre>
                 </div>
@@ -219,8 +204,8 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
       </div>
 
       {/* Possible Causes */}
-      <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-6">
-        <h4 className="text-sm font-semibold text-orange-200 flex items-center gap-2">
+      <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-6">
+        <h4 className="flex items-center gap-2 text-sm font-semibold text-orange-200">
           <svg
             className="h-5 w-5"
             fill="none"
@@ -247,8 +232,8 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
       </div>
 
       {/* Troubleshooting Steps */}
-      <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-6">
-        <h4 className="text-sm font-semibold text-blue-200 flex items-center gap-2">
+      <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-6">
+        <h4 className="flex items-center gap-2 text-sm font-semibold text-blue-200">
           <svg
             className="h-5 w-5"
             fill="none"
@@ -267,9 +252,7 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
         <ol className="mt-3 space-y-2">
           {error.troubleshootingSteps.map((step, index) => (
             <li key={index} className="flex items-start gap-3 text-sm text-blue-100">
-              <span className="flex-shrink-0 font-semibold text-blue-400">
-                {index + 1}.
-              </span>
+              <span className="flex-shrink-0 font-semibold text-blue-400">{index + 1}.</span>
               <span>{step}</span>
             </li>
           ))}
@@ -292,5 +275,5 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
         </a>
       </div>
     </div>
-  );
+  )
 }

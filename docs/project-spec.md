@@ -9,6 +9,7 @@ The ultimate goal is to create an intelligent assistant that understands your co
 ## High-Level Description
 
 My AI serves as a central hub that:
+
 - **Connects** to multiple data sources across different platforms and services
 - **Aggregates** and normalizes data into a unified format
 - **Analyzes** information using AI agents to extract insights and patterns
@@ -19,7 +20,9 @@ My AI serves as a central hub that:
 ## Core Capabilities
 
 ### 1. Data Source Integration
+
 The ability to connect, authenticate, and sync data from various third-party services:
+
 - Google Workspace (Calendar, Gmail, Drive, Docs, etc.)
 - Microsoft 365 (Outlook, OneDrive, Teams, etc.)
 - Cloud storage providers (Dropbox, Box, etc.)
@@ -28,7 +31,9 @@ The ability to connect, authenticate, and sync data from various third-party ser
 - Communication platforms (Slack, Discord, etc.)
 
 ### 2. Agentic Workflows
+
 AI-powered agents that can:
+
 - Understand and categorize incoming information
 - Identify patterns and relationships across data sources
 - Generate insights and recommendations
@@ -37,7 +42,9 @@ AI-powered agents that can:
 - Learn from user preferences and behaviors
 
 ### 3. Task & Project Management
+
 A comprehensive system for:
+
 - Creating and organizing tasks from multiple sources
 - Prioritizing work based on deadlines, importance, and context
 - Tracking progress across projects
@@ -48,24 +55,28 @@ A comprehensive system for:
 ## Key User Stories
 
 ### Data Connection & Management
+
 - As a user, I want to connect my Google account so that I can access my emails, calendar, and documents in one place
 - As a user, I want to manage my connected data sources so that I can control what data is being accessed
 - As a user, I want to see the sync status of my data sources so that I know my information is up to date
 - As a user, I want to disconnect or revoke access to data sources when needed
 
 ### Intelligent Insights & Planning
+
 - As a user, I want AI agents to analyze my calendar so that I can identify scheduling conflicts and time optimization opportunities
 - As a user, I want to receive insights about my communication patterns so that I can better manage my relationships
 - As a user, I want AI to help me plan my week based on my tasks, meetings, and priorities
 - As a user, I want to ask questions about my data and get AI-generated answers
 
 ### Task Execution & Automation
+
 - As a user, I want to create tasks from emails, messages, or calendar events automatically
 - As a user, I want AI agents to suggest next actions based on my current context
 - As a user, I want to delegate routine decisions to AI agents within defined parameters
 - As a user, I want to set up automated workflows that trigger based on specific conditions
 
 ### Dashboard & Visualization
+
 - As a user, I want a unified dashboard that shows my upcoming schedule, priority tasks, and key insights
 - As a user, I want to filter and view tasks by project, priority, deadline, or data source
 - As a user, I want to visualize trends in my productivity, communication, and time usage
@@ -76,7 +87,9 @@ A comprehensive system for:
 ### Component Overview
 
 #### Frontend Layer
+
 **Web Application**
+
 - Next.js-based responsive web interface
 - Real-time updates and notifications
 - Rich data visualizations and dashboards
@@ -84,7 +97,9 @@ A comprehensive system for:
 - Progressive Web App (PWA) capabilities
 
 #### Backend Layer
+
 **API Services**
+
 - RESTful API server for client-server communication
 - GraphQL endpoints for flexible data queries
 - WebSocket server for real-time updates
@@ -92,6 +107,7 @@ A comprehensive system for:
 - Rate limiting and request validation
 
 **Data Processing Services**
+
 - Data ingestion and normalization pipelines
 - ETL (Extract, Transform, Load) workflows
 - Data synchronization services
@@ -99,7 +115,9 @@ A comprehensive system for:
 - Background job processors
 
 #### Data Layer
+
 **Primary Database**
+
 - PostgreSQL for structured data
 - User accounts and authentication
 - Connected service credentials (encrypted)
@@ -107,25 +125,30 @@ A comprehensive system for:
 - User preferences and settings
 
 **Document Store**
+
 - MongoDB or similar for semi-structured data
 - Cached external service data
 - Email and message content
 - Document metadata and indexing
 
 **Cache Layer**
+
 - Redis for session management
 - Query result caching
 - Rate limit tracking
 - Real-time data pubsub
 
 **Vector Database**
+
 - Pinecone, Weaviate, or similar for embeddings
 - Semantic search capabilities
 - AI-powered content discovery
 - Cross-document relationship mapping
 
 #### Third-Party Integration Layer
+
 **OAuth & Authentication**
+
 - Google OAuth 2.0 for Google Workspace
 - Microsoft Identity Platform for Microsoft 365
 - Service-specific OAuth implementations
@@ -133,6 +156,7 @@ A comprehensive system for:
 - Secure credential storage
 
 **Data Provider APIs**
+
 - Google Calendar API
 - Gmail API
 - Google Drive API
@@ -142,13 +166,16 @@ A comprehensive system for:
 - Other service-specific APIs
 
 #### AI & Agent Layer
+
 **Language Models**
+
 - Claude (Anthropic) for conversational AI
 - OpenAI GPT models for specialized tasks
 - Local models for privacy-sensitive operations
 - Model router for cost/quality optimization
 
 **Agent Framework**
+
 - Task planning and decomposition agents
 - Data analysis and insight agents
 - Communication and summarization agents
@@ -156,38 +183,46 @@ A comprehensive system for:
 - Learning and personalization agents
 
 **Embedding & Retrieval**
+
 - Text embedding generation
 - Semantic similarity search
 - Context retrieval for AI agents
 - Knowledge graph construction
 
 #### Automation & Scheduling Layer
+
 **Cron Jobs**
+
 - Scheduled data synchronization
 - Periodic cleanup and maintenance
 - Automated report generation
 - Reminder and notification dispatch
 
 **Cloud Functions / Serverless**
+
 - Event-driven data processing
 - Webhook receivers for third-party services
 - On-demand transformation pipelines
 - Scalable compute for batch operations
 
 **Workflow Engine**
+
 - User-defined automation rules
 - Conditional logic and branching
 - Integration between services
 - Trigger-action-condition framework
 
 #### Monitoring & Operations
+
 **Observability**
+
 - Application performance monitoring
 - Error tracking and alerting
 - User analytics and usage metrics
 - Cost tracking for external APIs
 
 **Infrastructure**
+
 - Vercel for web app hosting
 - Cloud provider for backend services (AWS/GCP/Azure)
 - CDN for static assets
@@ -196,7 +231,9 @@ A comprehensive system for:
 ## Core UI Components
 
 ### 1. Dashboard
+
 **Main Hub**
+
 - Today's overview (calendar, priority tasks, insights)
 - Quick actions and shortcuts
 - Recent activity feed
@@ -204,13 +241,16 @@ A comprehensive system for:
 - Customizable widget layout
 
 **Metrics & Insights**
+
 - Productivity trends
 - Time allocation breakdown
 - Communication patterns
 - Goal progress tracking
 
 ### 2. Task Management Interface
+
 **Task List Views**
+
 - All tasks with advanced filtering
 - Today/This Week/Upcoming views
 - Project-based organization
@@ -218,6 +258,7 @@ A comprehensive system for:
 - Custom saved views
 
 **Task Details**
+
 - Rich text descriptions
 - Due dates and reminders
 - Tags and categories
@@ -227,13 +268,16 @@ A comprehensive system for:
 - Dependency tracking
 
 **Quick Capture**
+
 - Rapid task creation
 - Voice input support
 - Email-to-task conversion
 - AI-assisted task parsing
 
 ### 3. Calendar Management
+
 **Calendar Views**
+
 - Day, week, month, and agenda views
 - Multi-calendar overlay
 - Time blocking and scheduling
@@ -241,58 +285,71 @@ A comprehensive system for:
 - Travel time calculation
 
 **Smart Scheduling**
+
 - AI-suggested meeting times
 - Conflict detection and resolution
 - Focus time protection
 - Calendar analytics
 
 ### 4. Communications Management
+
 **Unified Inbox**
+
 - Aggregated view of emails and messages
 - Priority sorting and filtering
 - AI-powered categorization
 - Quick responses and templates
 
 **Communication Insights**
+
 - Response time analytics
 - Important contact identification
 - Conversation summaries
 - Action item extraction
 
 ### 5. Data Source Management
+
 **Connected Services**
+
 - List of authorized connections
 - Sync status and health monitoring
 - Permission management
 - Connection settings and preferences
 
 **Sync Controls**
+
 - Manual sync triggers
 - Sync frequency configuration
 - Selective data synchronization
 - Data retention policies
 
 ### 6. Agent & Workflow Management
+
 **Agent Configuration**
+
 - Available agent types and capabilities
 - Agent activation and deactivation
 - Custom agent parameters
 - Agent performance metrics
 
 **Workflow Builder**
+
 - Visual workflow design interface
 - Trigger, condition, and action configuration
 - Testing and debugging tools
 - Workflow templates and sharing
 
 ### 7. Settings & Preferences
+
 **User Profile**
+
 - Personal information
 - Notification preferences
 - Theme and display options
 - Privacy settings
 
 **System Configuration**
+
 - AI model selection
 - Data retention policies
 - Export and backup options
@@ -301,6 +358,7 @@ A comprehensive system for:
 ## Technology Stack Considerations
 
 ### Frontend
+
 - Next.js 16+ with App Router
 - React 19+ for UI components
 - TypeScript for type safety
@@ -310,6 +368,7 @@ A comprehensive system for:
 - Zustand or Jotai for state management
 
 ### Backend
+
 - Node.js with Express or Fastify
 - TypeScript
 - Prisma or TypeORM for database ORM
@@ -317,12 +376,14 @@ A comprehensive system for:
 - Socket.io for real-time features
 
 ### Infrastructure
+
 - Vercel for frontend hosting
 - AWS/GCP/Azure for backend services
 - Supabase or similar for database hosting
 - Cloudflare for CDN and security
 
 ### AI & ML
+
 - Anthropic Claude API
 - OpenAI API
 - LangChain or similar orchestration framework
@@ -331,6 +392,7 @@ A comprehensive system for:
 ## Development Phases
 
 ### Phase 1: Foundation (Current)
+
 - Monorepo setup with pnpm and Turborepo ✓
 - Next.js web application scaffold ✓
 - Database layer and schema design (in progress)
@@ -338,6 +400,7 @@ A comprehensive system for:
 - Basic authentication system
 
 ### Phase 2: Core Integration
+
 - Google Calendar integration
 - Gmail integration
 - Basic task management system
@@ -345,6 +408,7 @@ A comprehensive system for:
 - Data synchronization infrastructure
 
 ### Phase 3: Agent Foundation
+
 - AI agent framework setup
 - Basic insight generation
 - Email and task summarization
@@ -352,6 +416,7 @@ A comprehensive system for:
 - Context-aware suggestions
 
 ### Phase 4: Expansion
+
 - Additional data source integrations
 - Advanced workflow builder
 - Comprehensive analytics
@@ -359,6 +424,7 @@ A comprehensive system for:
 - Advanced agent capabilities
 
 ### Phase 5: Intelligence & Personalization
+
 - Learning from user behavior
 - Predictive recommendations
 - Advanced automation
@@ -397,4 +463,4 @@ A comprehensive system for:
 
 ---
 
-*This specification is a living document and will evolve as the project develops and user needs become clearer.*
+_This specification is a living document and will evolve as the project develops and user needs become clearer._

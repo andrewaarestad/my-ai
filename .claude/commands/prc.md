@@ -7,6 +7,7 @@ User-provided additional info: <user_data> $ARGUMENTS </user_data>
 ## Overview
 
 Run the same checks that CI/CD runs on pull requests:
+
 1. **lint** - ESLint/linting checks
 2. **format:check** - Prettier/formatting checks
 3. **typecheck** - TypeScript type checking
@@ -44,11 +45,13 @@ Handle failures in this order (earlier fixes often resolve later issues):
 ### 2.1 Lint Errors
 
 1. **First, try auto-fix:**
+
    ```bash
    npm run lint:fix
    ```
 
 2. **Re-run lint to see remaining issues:**
+
    ```bash
    npm run lint
    ```
@@ -62,6 +65,7 @@ Handle failures in this order (earlier fixes often resolve later issues):
 ### 2.2 Format Errors
 
 1. **Run the formatter to auto-fix:**
+
    ```bash
    npm run format
    ```
@@ -98,6 +102,7 @@ Read error messages carefully and edit the relevant files.
 ### 2.5 Build Errors
 
 Build errors are usually caused by:
+
 - TypeScript errors (fix those first)
 - Missing dependencies
 - Import/export issues
@@ -157,13 +162,13 @@ npx turbo run build --filter=desty-api
 
 ## Task Reference
 
-| Task | Command | Auto-fixable |
-|------|---------|--------------|
-| lint | `npm run lint` | Partially (`npm run lint:fix`) |
-| format:check | `npm run format:check` | Yes (`npm run format`) |
-| typecheck | `npm run typecheck` | No - manual fixes required |
-| test | `npm run test` | No - manual fixes required |
-| build | `npm run build` | No - fix underlying issues |
+| Task         | Command                | Auto-fixable                   |
+| ------------ | ---------------------- | ------------------------------ |
+| lint         | `npm run lint`         | Partially (`npm run lint:fix`) |
+| format:check | `npm run format:check` | Yes (`npm run format`)         |
+| typecheck    | `npm run typecheck`    | No - manual fixes required     |
+| test         | `npm run test`         | No - manual fixes required     |
+| build        | `npm run build`        | No - fix underlying issues     |
 
 ---
 

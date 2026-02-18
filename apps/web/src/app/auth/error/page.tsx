@@ -1,9 +1,9 @@
-import { AuthError } from "@/components/auth/AuthError";
-import { parseAuthError } from "@/types/auth-errors";
-import { logAuthError } from "@/lib/error-logger";
+import { AuthError } from '@/components/auth/AuthError'
+import { parseAuthError } from '@/types/auth-errors'
+import { logAuthError } from '@/lib/error-logger'
 
 interface ErrorPageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 /**
@@ -13,19 +13,15 @@ interface ErrorPageProps {
  * Displays environment-appropriate error messages.
  */
 export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
-  const params = await searchParams;
-  const error = parseAuthError(params);
+  const params = await searchParams
+  const error = parseAuthError(params)
 
   // Log the error for monitoring
   if (error) {
-    await logAuthError(
-      error.code,
-      error.technicalMessage,
-      {
-        userMessage: error.userMessage,
-        errorSource: 'nextauth_error_page',
-      }
-    );
+    await logAuthError(error.code, error.technicalMessage, {
+      userMessage: error.userMessage,
+      errorSource: 'nextauth_error_page',
+    })
   }
 
   // If no error is found, show a generic error
@@ -44,7 +40,7 @@ export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
       'Clear browser cookies',
       'Contact support if the problem persists',
     ],
-  };
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4 py-12">
@@ -63,7 +59,7 @@ export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
         />
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -73,5 +69,5 @@ export function generateMetadata() {
   return {
     title: 'Authentication Error - My AI',
     description: 'An error occurred during authentication',
-  };
+  }
 }

@@ -48,15 +48,18 @@ pnpm auth:google
 ```
 
 **Expected behavior:**
+
 1. Browser opens to Google sign-in
 2. You grant Gmail read access
 3. Terminal shows: "✓ Authentication successful!"
 4. Tokens saved to `~/.my-ai/tokens.json`
 
 **Verify:**
+
 ```bash
 pnpm auth:google -- --check
 ```
+
 Should show: "✓ Authenticated as your@email.com"
 
 ### Step 2: Initial Gmail Sync
@@ -67,6 +70,7 @@ pnpm sync:gmail -- --verbose
 ```
 
 **Expected behavior:**
+
 1. First run detects no historyId → performs initial sync
 2. Fetches last 30 days of emails
 3. Shows progress: "Synced 10 messages...", "Synced 20 messages..."
@@ -74,9 +78,11 @@ pnpm sync:gmail -- --verbose
 5. Saves historyId for future incremental syncs
 
 **Verify data in database:**
+
 ```bash
 pnpm db:studio
 ```
+
 Check `GmailMessage`, `GmailThread`, and `GmailSyncState` tables.
 
 ### Step 3: Incremental Sync
@@ -88,6 +94,7 @@ pnpm sync:gmail -- --verbose
 ```
 
 **Expected behavior:**
+
 1. Detects existing historyId → uses History API
 2. Only fetches new/changed messages since last sync
 3. Much faster than initial sync
@@ -105,6 +112,7 @@ pnpm data:search "from:someone@example.com" -- --format=json
 ```
 
 **Expected behavior:**
+
 - Returns matching emails with subject, from, date, snippet
 - JSON format outputs structured data
 - Exit code 2 if no results found
@@ -116,6 +124,7 @@ pnpm data:search "from:someone@example.com" -- --format=json
 **Before fix:** Every sync was a full sync because historyId was never saved.
 
 **Test:**
+
 ```bash
 # Run initial sync
 pnpm sync:gmail -- --verbose
@@ -134,6 +143,7 @@ pnpm sync:gmail -- --verbose
 **Before fix:** Only first message with label changes was updated.
 
 **Test:**
+
 1. In Gmail web, select multiple emails and mark them all as starred
 2. Run sync:
    ```bash
@@ -167,19 +177,24 @@ pnpm data:search -- --help                  # Show help
 ## Troubleshooting
 
 ### "Not authenticated with Google"
+
 Run `pnpm auth:google` to authenticate.
 
 ### "GOOGLE_CLIENT_ID must be set"
+
 Check your `.env` file has the correct environment variables.
 
 ### "Cannot find module '@my-ai/core/db'"
+
 Run `pnpm install` to ensure packages are linked.
 
 ### Database connection errors
+
 - Verify `DATABASE_URL` is correct
 - Ensure Postgres is running
 - Run `pnpm db:push` to create tables
 
 ### OAuth redirect fails
+
 - Ensure port 3456 is available
 - Check that redirect URI in Google Cloud Console matches `http://localhost:3456/callback`

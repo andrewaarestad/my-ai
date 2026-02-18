@@ -1,25 +1,25 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useState } from 'react'
 
 export function LinkAccountButton() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   function handleLink() {
-    setLoading(true);
+    setLoading(true)
     // POST to the link initiation route — it will redirect to Google OAuth
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/api/auth/link/google";
-    document.body.appendChild(form);
-    form.submit();
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/api/auth/link/google'
+    document.body.appendChild(form)
+    form.submit()
   }
 
   return (
     <button
       onClick={() => handleLink()}
       disabled={loading}
-      className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white border border-white/20 hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <svg className="h-5 w-5" viewBox="0 0 24 24">
         <path
@@ -39,7 +39,7 @@ export function LinkAccountButton() {
           fill="#EA4335"
         />
       </svg>
-      {loading ? "Redirecting..." : "Connect Another Google Account"}
+      {loading ? 'Redirecting...' : 'Connect Another Google Account'}
     </button>
-  );
+  )
 }

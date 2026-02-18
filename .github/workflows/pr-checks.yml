@@ -90,12 +90,12 @@ jobs:
 
       - name: Generate Prisma Client
         env:
-          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
+          DATABASE_URL: 'postgresql://user:password@localhost:5432/test'
         run: pnpm prisma generate
 
       - name: Run PR Checks
         env:
-          DATABASE_URL: "postgresql://user:password@localhost:5432/test"
+          DATABASE_URL: 'postgresql://user:password@localhost:5432/test'
         run: pnpm pr-check
 
       - name: PR Checks Summary

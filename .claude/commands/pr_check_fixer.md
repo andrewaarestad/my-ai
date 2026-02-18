@@ -4,13 +4,13 @@ This workflow is meant to fix issues that are preventing the current branch from
 
 ## Phase 0: Fetching
 
-* Using the GitHub CLI, or GitHub GraphQL API, fetch the PR checks status
-* For each failing check, read the logs to find the error message
+- Using the GitHub CLI, or GitHub GraphQL API, fetch the PR checks status
+- For each failing check, read the logs to find the error message
 
 ## Phase 1: Planning
 
-* Using the error message and surrounding context, determine the root cause of the issue and find a solution
-* Looking at all of the error messages in sum, make a high-level implementation plan that will ensure that all of the issues with the PR checks will be resolved.
+- Using the error message and surrounding context, determine the root cause of the issue and find a solution
+- Looking at all of the error messages in sum, make a high-level implementation plan that will ensure that all of the issues with the PR checks will be resolved.
 
 This plan should address any and all issues that arise in the PR check. After this plan is complete, we fully expect the ENTIRE set of PR checks to pass.
 
@@ -20,7 +20,7 @@ Present a plan to the user for how to address the issues. If the user gives feed
 
 ## Phase 3: Implementation
 
-Fix each issue in the PR checks. 
+Fix each issue in the PR checks.
 
 ## Phase 4: Test
 
@@ -34,7 +34,7 @@ Once all tests are passing, run the lint-fix tool and commit the changes. Push t
 
 ## Phase 6+: Monitor
 
-Ask the user if they would like you to monitor the PR.  If they do, then proceed with the following algorithm:
+Ask the user if they would like you to monitor the PR. If they do, then proceed with the following algorithm:
 
 1. Set a sleep timer for 30 seconds
 2. Check the status of the PR checks

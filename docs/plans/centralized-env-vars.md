@@ -32,6 +32,7 @@ apps/cli/
 ### Move CLI scripts from root `package.json` into `apps/cli/package.json`
 
 Remove these from root `package.json`:
+
 ```diff
 - "auth:google": "tsx scripts/auth-google.ts",
 - "sync:gmail": "tsx scripts/sync-gmail.ts",
@@ -39,6 +40,7 @@ Remove these from root `package.json`:
 ```
 
 Add them to `apps/cli/package.json`:
+
 ```json
 {
   "name": "@my-ai/cli",
@@ -51,6 +53,7 @@ Add them to `apps/cli/package.json`:
 ```
 
 These can then be run from the repo root via:
+
 - `pnpm --filter @my-ai/cli auth:google`
 - `pnpm --filter @my-ai/cli sync:gmail`
 - `pnpm --filter @my-ai/cli data:search "query"`
@@ -98,6 +101,7 @@ Update all exported functions (`getGoogleAuthClient`, `runGoogleAuthFlow`) to ac
 The Prisma singleton reads `NODE_ENV` for log levels and the dev singleton pattern. Two options:
 
 **Option A** — Accept a config parameter:
+
 ```ts
 export function createPrismaClient(opts?: { verbose?: boolean }): PrismaClient { ... }
 ```
@@ -116,17 +120,17 @@ Re-export the `GoogleAuthConfig` type so consumers can import it.
 
 ```ts
 function required(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    throw new Error(`Missing required environment variable: ${name}`)
   }
-  return value;
+  return value
 }
 
 export const env = {
-  GOOGLE_CLIENT_ID: required("GOOGLE_CLIENT_ID"),
-  GOOGLE_CLIENT_SECRET: required("GOOGLE_CLIENT_SECRET"),
-};
+  GOOGLE_CLIENT_ID: required('GOOGLE_CLIENT_ID'),
+  GOOGLE_CLIENT_SECRET: required('GOOGLE_CLIENT_SECRET'),
+}
 ```
 
 ### Update CLI scripts to use it
@@ -135,11 +139,11 @@ Each script imports `env` and passes config to `@my-ai/core`:
 
 ```ts
 // apps/cli/src/auth-google.ts
-import { env } from "./environment";
-import { runGoogleAuthFlow, getGoogleAuthClient } from "@my-ai/core/auth";
+import { env } from './environment'
+import { runGoogleAuthFlow, getGoogleAuthClient } from '@my-ai/core/auth'
 
 // Pass env to core functions
-await runGoogleAuthFlow({ clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET });
+await runGoogleAuthFlow({ clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET })
 ```
 
 Same pattern for `sync-gmail.ts` (passes config to `getGoogleAuthClient`) and `search.ts` (only uses `@my-ai/core/db` which doesn't need app config).
@@ -150,39 +154,39 @@ Same pattern for `sync-gmail.ts` (passes config to `getGoogleAuthClient`) and `s
 
 ```ts
 function required(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    throw new Error(`Missing required environment variable: ${name}`)
   }
-  return value;
+  return value
 }
 
 function optional(name: string): string | undefined {
-  return process.env[name] || undefined;
+  return process.env[name] || undefined
 }
 
 export const env = {
-  GOOGLE_CLIENT_ID: required("GOOGLE_CLIENT_ID"),
-  GOOGLE_CLIENT_SECRET: required("GOOGLE_CLIENT_SECRET"),
-  NEXTAUTH_SECRET: required("NEXTAUTH_SECRET"),
-  NEXTAUTH_URL: required("NEXTAUTH_URL"),
+  GOOGLE_CLIENT_ID: required('GOOGLE_CLIENT_ID'),
+  GOOGLE_CLIENT_SECRET: required('GOOGLE_CLIENT_SECRET'),
+  NEXTAUTH_SECRET: required('NEXTAUTH_SECRET'),
+  NEXTAUTH_URL: required('NEXTAUTH_URL'),
 
-  NODE_ENV: optional("NODE_ENV") ?? "development",
-  VERCEL_ENV: optional("VERCEL_ENV"),
+  NODE_ENV: optional('NODE_ENV') ?? 'development',
+  VERCEL_ENV: optional('VERCEL_ENV'),
 
   get isDevelopment(): boolean {
-    return !this.VERCEL_ENV && this.NODE_ENV === "development";
+    return !this.VERCEL_ENV && this.NODE_ENV === 'development'
   },
   get isProduction(): boolean {
-    return this.VERCEL_ENV === "production" || (!this.VERCEL_ENV && this.NODE_ENV === "production");
+    return this.VERCEL_ENV === 'production' || (!this.VERCEL_ENV && this.NODE_ENV === 'production')
   },
   get isPreview(): boolean {
-    return this.VERCEL_ENV === "preview";
+    return this.VERCEL_ENV === 'preview'
   },
   get isSecure(): boolean {
-    return this.NEXTAUTH_URL.startsWith("https://") || this.isProduction;
+    return this.NEXTAUTH_URL.startsWith('https://') || this.isProduction
   },
-};
+}
 
 /**
  * Edge-safe env access — returns fallbacks instead of throwing.
@@ -190,15 +194,16 @@ export const env = {
  * vars may not be available during the build step.
  */
 export const edgeEnv = {
-  GOOGLE_CLIENT_ID: optional("GOOGLE_CLIENT_ID") ?? "missing-client-id",
-  GOOGLE_CLIENT_SECRET: optional("GOOGLE_CLIENT_SECRET") ?? "missing-client-secret",
-  NEXTAUTH_SECRET: optional("NEXTAUTH_SECRET") ?? "missing-secret",
-};
+  GOOGLE_CLIENT_ID: optional('GOOGLE_CLIENT_ID') ?? 'missing-client-id',
+  GOOGLE_CLIENT_SECRET: optional('GOOGLE_CLIENT_SECRET') ?? 'missing-client-secret',
+  NEXTAUTH_SECRET: optional('NEXTAUTH_SECRET') ?? 'missing-secret',
+}
 ```
 
 ### Update web app files to use `env`
 
 **`apps/web/src/lib/auth.ts`**
+
 - Import `{ env }` from `"./environment"`
 - Remove import of `isDevelopment, isProduction` from `"./env"`
 - Replace all `process.env.GOOGLE_CLIENT_ID` → `env.GOOGLE_CLIENT_ID`
@@ -210,22 +215,26 @@ export const edgeEnv = {
 - Replace `process.env.NODE_ENV === "development"` → `env.isDevelopment`
 
 **`apps/web/src/lib/auth-middleware.ts`**
+
 - Import `{ edgeEnv }` from `"./environment"`
 - Replace `process.env.GOOGLE_CLIENT_ID || "dummy-client-id"` → `edgeEnv.GOOGLE_CLIENT_ID`
 - Replace `process.env.GOOGLE_CLIENT_SECRET || "dummy-client-secret"` → `edgeEnv.GOOGLE_CLIENT_SECRET`
 - Replace `process.env.NEXTAUTH_SECRET || "dummy-secret-for-build"` → `edgeEnv.NEXTAUTH_SECRET`
 
 **`apps/web/src/lib/token-refresh.ts`**
+
 - Import `{ env }` from `"./environment"`
 - Replace `process.env.GOOGLE_CLIENT_ID!` → `env.GOOGLE_CLIENT_ID`
 - Replace `process.env.GOOGLE_CLIENT_SECRET!` → `env.GOOGLE_CLIENT_SECRET`
 
 **`apps/web/src/lib/prisma.ts`**
+
 - Import `{ env }` from `"./environment"`
 - Replace `process.env.NODE_ENV === "development"` → `env.isDevelopment`
 - Replace `process.env.NODE_ENV !== "production"` → `!env.isProduction`
 
 **`apps/web/src/lib/error-logger.ts`**
+
 - Import `{ env }` from `"./environment"`
 - Remove import from `"./env"`
 - Replace `getEnvironment()` → `env.VERCEL_ENV ?? env.NODE_ENV` (or add a `get environment()` getter to env)
@@ -253,8 +262,8 @@ export const edgeEnv = {
 
 ## Summary of `process.env` access points (after)
 
-| File | Env Vars | Justification |
-|------|----------|---------------|
-| `apps/web/src/lib/environment.ts` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NODE_ENV`, `VERCEL_ENV` | Web app entrypoint |
-| `apps/cli/src/environment.ts` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | CLI app entrypoint |
-| `packages/core/src/db/client.ts` | `NODE_ENV` | Runtime convention (same as Prisma's own `DATABASE_URL` read) |
+| File                              | Env Vars                                                                                                | Justification                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `apps/web/src/lib/environment.ts` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NODE_ENV`, `VERCEL_ENV` | Web app entrypoint                                            |
+| `apps/cli/src/environment.ts`     | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                                              | CLI app entrypoint                                            |
+| `packages/core/src/db/client.ts`  | `NODE_ENV`                                                                                              | Runtime convention (same as Prisma's own `DATABASE_URL` read) |

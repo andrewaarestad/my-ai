@@ -1,14 +1,14 @@
-import { signIn } from "@/lib/auth";
-import { AuthError } from "@/components/auth/AuthError";
-import { parseAuthError } from "@/types/auth-errors";
+import { signIn } from '@/lib/auth'
+import { AuthError } from '@/components/auth/AuthError'
+import { parseAuthError } from '@/types/auth-errors'
 
 interface SignInPageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export default async function SignIn({ searchParams }: SignInPageProps) {
-  const params = await searchParams;
-  const error = parseAuthError(params);
+  const params = await searchParams
+  const error = parseAuthError(params)
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4">
@@ -24,11 +24,11 @@ export default async function SignIn({ searchParams }: SignInPageProps) {
           </div>
         )}
 
-        <div className={error ? "mt-6" : "mt-8"}>
+        <div className={error ? 'mt-6' : 'mt-8'}>
           <form
             action={async () => {
-              "use server";
-              await signIn("google", { redirectTo: "/dashboard" });
+              'use server'
+              await signIn('google', { redirectTo: '/dashboard' })
             }}
           >
             <button
@@ -63,5 +63,5 @@ export default async function SignIn({ searchParams }: SignInPageProps) {
         </p>
       </div>
     </div>
-  );
+  )
 }

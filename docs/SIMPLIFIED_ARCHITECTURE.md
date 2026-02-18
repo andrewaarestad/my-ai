@@ -1,7 +1,9 @@
 # Simplified Architecture Plan
 
 ## Goal
+
 A local-first CLI/script-based system where Claude Code can:
+
 1. Sync personal data from various sources
 2. Search over indexed data
 3. Collaborate on task execution
@@ -43,16 +45,19 @@ my-ai/
 ## Data Sources
 
 ### 1. Gmail (exists - extract from web app)
+
 - Full message sync with incremental updates
 - Already have: gmail-client.ts, gmail-sync.ts
 - Extract and simplify token management
 
 ### 2. Google Calendar (new)
+
 - Sync events within a date range
 - Store: title, time, location, attendees, description
 - Use same OAuth flow as Gmail
 
 ### 3. Monarch (new)
+
 - Financial transactions export
 - Options:
   - A) Monarch API if available
@@ -61,12 +66,14 @@ my-ai/
 - Store: date, amount, merchant, category, account
 
 ### 4. Obsidian (new)
+
 - Local markdown files
 - Simple: glob for .md files, parse frontmatter + content
 - Store: title, path, tags, content, links
 - Watch for changes or manual sync
 
 ### 5. Tasks (exists - extract from web app)
+
 - Simple task list with status
 - Already have: task-service.ts
 - Add: due dates, priorities, notes, subtasks
@@ -78,16 +85,19 @@ my-ai/
 Two approaches (start simple, upgrade if needed):
 
 ### Option A: SQLite Full-Text Search (Simple)
+
 - Use Prisma with SQLite instead of Postgres
 - Add FTS5 virtual tables for searchable content
 - Good enough for personal data volume
 
 ### Option B: Keep Postgres + pg_trgm
+
 - Already have Postgres setup
 - Add trigram indexes for fuzzy search
 - More powerful but heavier
 
 ### Option C: Embedded Vector Search (Future)
+
 - Add embeddings for semantic search
 - sqlite-vss or similar
 - Only if keyword search isn't enough
@@ -99,12 +109,14 @@ Two approaches (start simple, upgrade if needed):
 ## Skills Design
 
 Each skill is a standalone script that:
+
 1. Takes arguments from CLI
 2. Does one thing well
 3. Returns structured output (JSON or formatted text)
 4. Can be run directly or called by Claude
 
 ### Example: `skills/sync-gmail.ts`
+
 ```typescript
 #!/usr/bin/env npx tsx
 
@@ -115,20 +127,23 @@ async function main() {
   const token = await getAuthToken('google')
   const result = await syncGmail(token, {
     maxMessages: 100,
-    incremental: true
+    incremental: true,
   })
 
-  console.log(JSON.stringify({
-    synced: result.newMessages,
-    updated: result.updatedMessages,
-    total: result.totalStored
-  }))
+  console.log(
+    JSON.stringify({
+      synced: result.newMessages,
+      updated: result.updatedMessages,
+      total: result.totalStored,
+    })
+  )
 }
 
 main().catch(console.error)
 ```
 
 ### Example: `skills/search-data.ts`
+
 ```typescript
 #!/usr/bin/env npx tsx
 
@@ -156,18 +171,22 @@ main().catch(console.error)
 ## Authentication Strategy
 
 ### For Google (Gmail, Calendar)
+
 - One-time OAuth flow via browser
 - Store refresh token in database or encrypted file
 - Auto-refresh access tokens when needed
 
 ### For Monarch
+
 - TBD based on their API
 - Likely: API key or session token
 
 ### For Obsidian
+
 - No auth needed - local files
 
 **Implementation**: Simple `packages/core/auth.ts` that:
+
 - Stores tokens per service
 - Handles refresh
 - Provides `getAuthToken(service)` function
@@ -177,6 +196,7 @@ main().catch(console.error)
 ## Database
 
 Keep Prisma + Postgres (already working):
+
 - `User` → probably not needed, single user
 - `GmailMessage`, `GmailThread` → keep
 - `CalendarEvent` → new
@@ -191,6 +211,7 @@ Could simplify to SQLite for true local-first, but Postgres works fine for now.
 ## Migration Path
 
 ### Phase 1: Extract Core (Day 1)
+
 1. Create new `packages/` structure
 2. Copy gmail-client.ts, gmail-sync.ts → packages/sync/gmail/
 3. Copy task-service.ts → packages/tasks/
@@ -199,26 +220,31 @@ Could simplify to SQLite for true local-first, but Postgres works fine for now.
 6. Test: run skill, verify data in database
 
 ### Phase 2: Add Calendar (Day 2)
+
 1. Create packages/sync/calendar/
 2. Use same Google OAuth token
 3. Create `skills/sync-calendar.ts`
 
 ### Phase 3: Add Search (Day 2-3)
+
 1. Create packages/search/
 2. Simple ILIKE search across tables
 3. Create `skills/search-data.ts`
 
 ### Phase 4: Add Obsidian (Day 3)
+
 1. Create packages/sync/obsidian/
 2. Glob for .md files, parse content
 3. Create `skills/sync-obsidian.ts`
 
 ### Phase 5: Add Monarch (Day 4+)
+
 1. Research Monarch API or export format
 2. Create packages/sync/monarch/
 3. Create `skills/sync-monarch.ts`
 
 ### Phase 6: Enhanced Tasks (Ongoing)
+
 1. Add due dates, priorities
 2. Create task workflow skills
 3. Integrate with other data (e.g., tasks from emails)
@@ -228,12 +254,14 @@ Could simplify to SQLite for true local-first, but Postgres works fine for now.
 ## What to Delete
 
 After migration, remove:
+
 - `apps/web/` (entire Next.js app)
 - `packages/ui/` (React components)
 - Vercel config
 - NextAuth config
 
 Keep:
+
 - `prisma/` (schema and migrations)
 - Core lib files (extracted to packages)
 

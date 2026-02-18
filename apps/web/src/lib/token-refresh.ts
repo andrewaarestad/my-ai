@@ -1,15 +1,15 @@
-import { prisma } from "./prisma";
-import { env } from "./environment";
+import { prisma } from './prisma'
+import { env } from './environment'
 
 /**
  * Google OAuth token response type
  */
 interface GoogleTokenResponse {
-  access_token: string;
-  expires_in?: number;
-  refresh_token?: string;
-  error?: string;
-  error_description?: string;
+  access_token: string
+  expires_in?: number
+  refresh_token?: string
+  error?: string
+  error_description?: string
 }
 
 /**
@@ -19,36 +19,36 @@ interface GoogleTokenResponse {
  * @returns New access token, refresh token (if rotated), and expiration time
  */
 async function refreshGoogleToken(refreshToken: string) {
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
       client_id: env.GOOGLE_CLIENT_ID,
       client_secret: env.GOOGLE_CLIENT_SECRET,
-      grant_type: "refresh_token",
+      grant_type: 'refresh_token',
       refresh_token: refreshToken,
     }),
-  });
+  })
 
   if (!response.ok) {
     const error = (await response.json().catch(() => ({}))) as
       | GoogleTokenResponse
-      | Record<string, unknown>;
+      | Record<string, unknown>
     throw new Error(
       `Failed to refresh token: ${response.status} ${response.statusText}. ${JSON.stringify(error)}`
-    );
+    )
   }
 
-  const tokens = (await response.json()) as GoogleTokenResponse;
+  const tokens = (await response.json()) as GoogleTokenResponse
 
   return {
     access_token: tokens.access_token,
     expires_at: Math.floor(Date.now() / 1000) + (tokens.expires_in ?? 3600),
     refresh_token: tokens.refresh_token ?? refreshToken, // Google may not return refresh_token if unchanged
     expires_in: tokens.expires_in ?? 3600,
-  };
+  }
 }
 
 /**
@@ -59,9 +59,9 @@ async function refreshGoogleToken(refreshToken: string) {
  * @returns true if token is expired or will expire soon
  */
 function isTokenExpired(expiresAt: number | null, bufferSeconds = 60): boolean {
-  if (!expiresAt) return true;
+  if (!expiresAt) return true
   // Add buffer to refresh before actual expiration
-  return Date.now() >= (expiresAt - bufferSeconds) * 1000;
+  return Date.now() >= (expiresAt - bufferSeconds) * 1000
 }
 
 /**
@@ -74,11 +74,11 @@ function isTokenExpired(expiresAt: number | null, bufferSeconds = 60): boolean {
  */
 export async function getValidAccessToken(
   userId: string,
-  provider = "google",
+  provider = 'google',
   providerAccountId?: string
 ): Promise<string | null> {
-  const tokens = await refreshAccountTokens(userId, provider, providerAccountId);
-  return tokens?.access_token || null;
+  const tokens = await refreshAccountTokens(userId, provider, providerAccountId)
+  return tokens?.access_token || null
 }
 
 /**
@@ -91,43 +91,44 @@ export async function getValidAccessToken(
  */
 export async function refreshUserTokens(
   userId: string,
-  provider = "google"
+  provider = 'google'
 ): Promise<{ access_token: string; expires_at: number; refresh_token: string } | null> {
   try {
     const accounts = await prisma.account.findMany({
       where: { userId, provider },
-    });
+    })
 
     if (accounts.length === 0) {
       // eslint-disable-next-line no-console
-      console.warn(`No ${provider} accounts found for user ${userId}`);
-      return null;
+      console.warn(`No ${provider} accounts found for user ${userId}`)
+      return null
     }
 
-    let lastResult: { access_token: string; expires_at: number; refresh_token: string } | null = null;
+    let lastResult: { access_token: string; expires_at: number; refresh_token: string } | null =
+      null
 
     for (const account of accounts) {
       if (!account.refresh_token) {
         // eslint-disable-next-line no-console
-        console.warn(`No refresh token for account ${account.providerAccountId}`);
-        continue;
+        console.warn(`No refresh token for account ${account.providerAccountId}`)
+        continue
       }
 
       if (!isTokenExpired(account.expires_at)) {
         // Token still valid — track it but don't refresh
         lastResult = {
-          access_token: account.access_token || "",
+          access_token: account.access_token || '',
           expires_at: account.expires_at || 0,
           refresh_token: account.refresh_token,
-        };
-        continue;
+        }
+        continue
       }
 
       try {
         // eslint-disable-next-line no-console
-        console.log(`Refreshing ${provider} token for account ${account.providerAccountId}`);
+        console.log(`Refreshing ${provider} token for account ${account.providerAccountId}`)
 
-        const newTokens = await refreshGoogleToken(account.refresh_token);
+        const newTokens = await refreshGoogleToken(account.refresh_token)
 
         await prisma.account.update({
           where: {
@@ -142,31 +143,33 @@ export async function refreshUserTokens(
             refresh_token: newTokens.refresh_token,
             updatedAt: new Date(),
           },
-        });
+        })
 
         // eslint-disable-next-line no-console
-        console.log(`Successfully refreshed ${provider} token for account ${account.providerAccountId}`);
+        console.log(
+          `Successfully refreshed ${provider} token for account ${account.providerAccountId}`
+        )
 
         lastResult = {
           access_token: newTokens.access_token,
           expires_at: newTokens.expires_at,
           refresh_token: newTokens.refresh_token,
-        };
+        }
       } catch (error) {
         // Log but continue to next account — one failing shouldn't block others
         // eslint-disable-next-line no-console
         console.error(
           `Error refreshing ${provider} token for account ${account.providerAccountId}:`,
           error
-        );
+        )
       }
     }
 
-    return lastResult;
+    return lastResult
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error(`Error refreshing ${provider} tokens for user ${userId}:`, error);
-    return null;
+    console.error(`Error refreshing ${provider} tokens for user ${userId}:`, error)
+    return null
   }
 }
 
@@ -192,25 +195,25 @@ async function refreshAccountTokens(
         })
       : await prisma.account.findFirst({
           where: { userId, provider },
-        });
+        })
 
     if (!account || account.userId !== userId) {
-      return null;
+      return null
     }
 
     if (!account.refresh_token) {
-      return null;
+      return null
     }
 
     if (!isTokenExpired(account.expires_at)) {
       return {
-        access_token: account.access_token || "",
+        access_token: account.access_token || '',
         expires_at: account.expires_at || 0,
         refresh_token: account.refresh_token,
-      };
+      }
     }
 
-    const newTokens = await refreshGoogleToken(account.refresh_token);
+    const newTokens = await refreshGoogleToken(account.refresh_token)
 
     await prisma.account.update({
       where: {
@@ -225,16 +228,16 @@ async function refreshAccountTokens(
         refresh_token: newTokens.refresh_token,
         updatedAt: new Date(),
       },
-    });
+    })
 
     return {
       access_token: newTokens.access_token,
       expires_at: newTokens.expires_at,
       refresh_token: newTokens.refresh_token,
-    };
+    }
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error(`Error refreshing token for account:`, error);
-    return null;
+    console.error(`Error refreshing token for account:`, error)
+    return null
   }
 }

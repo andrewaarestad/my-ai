@@ -8,20 +8,20 @@
  *   pnpm data:search "query" -- --format=json   JSON output
  */
 
-import { prisma } from "@my-ai/core/db";
+import { prisma } from '@my-ai/core/db'
 
 interface CliOptions {
-  query: string;
-  source?: string;
-  limit: number;
-  format: "text" | "json";
+  query: string
+  source?: string
+  limit: number
+  format: 'text' | 'json'
 }
 
 function parseArgs(): CliOptions {
-  const args = process.argv.slice(2);
+  const args = process.argv.slice(2)
 
   // Check for help first
-  if (args.includes("--help") || args.includes("-h")) {
+  if (args.includes('--help') || args.includes('-h')) {
     console.log(`
 Search CLI
 
@@ -39,50 +39,50 @@ Examples:
   pnpm data:search "project update"
   pnpm data:search "from:boss@company.com" -- --source=gmail
   pnpm data:search "meeting" -- --limit=50 --format=json
-`);
-    process.exit(0);
+`)
+    process.exit(0)
   }
 
   // First non-flag argument is the query
-  const query = args.find((arg) => !arg.startsWith("--") && !arg.startsWith("-"));
+  const query = args.find((arg) => !arg.startsWith('--') && !arg.startsWith('-'))
 
   if (!query) {
-    console.error('Usage: pnpm data:search "query" [options]');
-    console.error("Run: pnpm data:search -- --help for more info");
-    process.exit(1);
+    console.error('Usage: pnpm data:search "query" [options]')
+    console.error('Run: pnpm data:search -- --help for more info')
+    process.exit(1)
   }
 
   const options: CliOptions = {
     query,
     limit: 20,
-    format: "text",
-  };
+    format: 'text',
+  }
 
   for (const arg of args) {
-    if (arg.startsWith("--source=")) {
-      options.source = arg.split("=")[1];
-    } else if (arg.startsWith("--limit=")) {
-      const parsed = parseInt(arg.split("=")[1] ?? "20", 10);
+    if (arg.startsWith('--source=')) {
+      options.source = arg.split('=')[1]
+    } else if (arg.startsWith('--limit=')) {
+      const parsed = parseInt(arg.split('=')[1] ?? '20', 10)
       if (isNaN(parsed) || parsed <= 0) {
-        console.error(`Error: --limit must be a positive number, got "${arg.split("=")[1]}"`);
-        process.exit(1);
+        console.error(`Error: --limit must be a positive number, got "${arg.split('=')[1]}"`)
+        process.exit(1)
       }
-      options.limit = parsed;
-    } else if (arg === "--format=json") {
-      options.format = "json";
+      options.limit = parsed
+    } else if (arg === '--format=json') {
+      options.format = 'json'
     }
   }
 
-  return options;
+  return options
 }
 
 interface SearchResult {
-  source: string;
-  id: string;
-  title: string;
-  snippet: string;
-  date: Date;
-  metadata?: Record<string, unknown>;
+  source: string
+  id: string
+  title: string
+  snippet: string
+  date: Date
+  metadata?: Record<string, unknown>
 }
 
 async function searchGmail(query: string, limit: number): Promise<SearchResult[]> {
@@ -91,13 +91,13 @@ async function searchGmail(query: string, limit: number): Promise<SearchResult[]
   const messages = await prisma.gmailMessage.findMany({
     where: {
       OR: [
-        { subject: { contains: query, mode: "insensitive" } },
-        { bodyText: { contains: query, mode: "insensitive" } },
-        { from: { contains: query, mode: "insensitive" } },
-        { snippet: { contains: query, mode: "insensitive" } },
+        { subject: { contains: query, mode: 'insensitive' } },
+        { bodyText: { contains: query, mode: 'insensitive' } },
+        { from: { contains: query, mode: 'insensitive' } },
+        { snippet: { contains: query, mode: 'insensitive' } },
       ],
     },
-    orderBy: { internalDate: "desc" },
+    orderBy: { internalDate: 'desc' },
     take: limit,
     select: {
       id: true,
@@ -106,64 +106,64 @@ async function searchGmail(query: string, limit: number): Promise<SearchResult[]
       from: true,
       internalDate: true,
     },
-  });
+  })
 
   return messages.map((msg) => ({
-    source: "gmail",
+    source: 'gmail',
     id: msg.id,
-    title: msg.subject || "(No subject)",
-    snippet: msg.snippet || "",
+    title: msg.subject || '(No subject)',
+    snippet: msg.snippet || '',
     date: msg.internalDate,
     metadata: { from: msg.from },
-  }));
+  }))
 }
 
 async function main() {
-  const options = parseArgs();
+  const options = parseArgs()
 
-  let results: SearchResult[] = [];
+  let results: SearchResult[] = []
 
   // Search based on source filter
-  if (!options.source || options.source === "gmail") {
-    const gmailResults = await searchGmail(options.query, options.limit);
-    results.push(...gmailResults);
+  if (!options.source || options.source === 'gmail') {
+    const gmailResults = await searchGmail(options.query, options.limit)
+    results.push(...gmailResults)
   }
 
   // TODO: Add calendar, monarch, notes search in later phases
 
   // Sort by date
-  results.sort((a, b) => b.date.getTime() - a.date.getTime());
-  results = results.slice(0, options.limit);
+  results.sort((a, b) => b.date.getTime() - a.date.getTime())
+  results = results.slice(0, options.limit)
 
   // Output
-  if (options.format === "json") {
-    console.log(JSON.stringify(results, null, 2));
+  if (options.format === 'json') {
+    console.log(JSON.stringify(results, null, 2))
   } else {
     if (results.length === 0) {
-      console.log(`No results found for: "${options.query}"`);
-      process.exit(2);
+      console.log(`No results found for: "${options.query}"`)
+      process.exit(2)
     }
 
-    console.log(`Found ${results.length} results for: "${options.query}"\n`);
+    console.log(`Found ${results.length} results for: "${options.query}"\n`)
 
     for (const result of results) {
-      console.log(`[${result.source}] ${result.title}`);
+      console.log(`[${result.source}] ${result.title}`)
       if (result.metadata?.from) {
-        console.log(`  From: ${String(result.metadata.from)}`);
+        console.log(`  From: ${String(result.metadata.from)}`)
       }
-      console.log(`  Date: ${result.date.toISOString()}`);
+      console.log(`  Date: ${result.date.toISOString()}`)
       if (result.snippet) {
-        console.log(`  ${result.snippet.substring(0, 100)}...`);
+        console.log(`  ${result.snippet.substring(0, 100)}...`)
       }
-      console.log();
+      console.log()
     }
   }
 
-  await prisma.$disconnect();
+  await prisma.$disconnect()
 }
 
 main().catch(async (error: unknown) => {
-  console.error("Search failed:", error instanceof Error ? error.message : error);
-  await prisma.$disconnect();
-  process.exit(1);
-});
+  console.error('Search failed:', error instanceof Error ? error.message : error)
+  await prisma.$disconnect()
+  process.exit(1)
+})

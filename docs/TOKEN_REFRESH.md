@@ -11,6 +11,7 @@ The platform automatically refreshes expired Google OAuth access tokens using re
 ### 1. Token Storage
 
 When a user signs in with Google:
+
 - Access token and refresh token are stored in the `accounts` table
 - `expires_at` field stores the token expiration timestamp (Unix seconds)
 
@@ -19,12 +20,14 @@ When a user signs in with Google:
 Token refresh happens automatically in two scenarios:
 
 #### A. JWT Callback (Every Request)
+
 - The JWT callback checks token expiration every 5 minutes
 - If expired or expiring soon, it refreshes the token
 - Refreshed tokens are updated in the database
 - Prevents excessive database queries with 5-minute throttling
 
 #### B. Manual Refresh (API Routes)
+
 - Use `getValidAccessToken()` or `refreshUserTokens()` utilities
 - Useful when making Google API calls
 - Automatically refreshes if expired
@@ -50,7 +53,7 @@ Token refresh happens automatically in two scenarios:
 Refreshes OAuth tokens for a user if expired.
 
 ```typescript
-const tokens = await refreshUserTokens(userId, "google");
+const tokens = await refreshUserTokens(userId, 'google')
 // Returns: { access_token, expires_at, refresh_token } | null
 ```
 
@@ -59,7 +62,7 @@ const tokens = await refreshUserTokens(userId, "google");
 Gets a valid access token, refreshing if needed.
 
 ```typescript
-const token = await getValidAccessToken(userId, "google");
+const token = await getValidAccessToken(userId, 'google')
 // Returns: string | null
 ```
 
@@ -85,63 +88,63 @@ async jwt({ token, user, trigger }) {
 ### Example 1: Get Access Token in API Route
 
 ```typescript
-import { auth } from "@/lib/auth";
-import { getValidAccessToken } from "@/lib/token-refresh";
+import { auth } from '@/lib/auth'
+import { getValidAccessToken } from '@/lib/token-refresh'
 
 export async function GET(request: Request) {
-  const session = await auth();
-  
+  const session = await auth()
+
   if (!session?.user?.id) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response('Unauthorized', { status: 401 })
   }
 
   // Get valid access token (refreshes if expired)
-  const accessToken = await getValidAccessToken(session.user.id, "google");
-  
+  const accessToken = await getValidAccessToken(session.user.id, 'google')
+
   if (!accessToken) {
-    return new Response("Google account not connected or token expired", { status: 401 });
+    return new Response('Google account not connected or token expired', { status: 401 })
   }
 
   // Use token for Google API calls
-  const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+  const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-  });
+  })
 
-  return Response.json(await response.json());
+  return Response.json(await response.json())
 }
 ```
 
 ### Example 2: Manual Token Refresh
 
 ```typescript
-import { refreshUserTokens } from "@/lib/token-refresh";
+import { refreshUserTokens } from '@/lib/token-refresh'
 
 // Refresh tokens for a specific user
-const tokens = await refreshUserTokens(userId, "google");
+const tokens = await refreshUserTokens(userId, 'google')
 
 if (tokens) {
-  console.log("Access token:", tokens.access_token);
-  console.log("Expires at:", new Date(tokens.expires_at * 1000));
+  console.log('Access token:', tokens.access_token)
+  console.log('Expires at:', new Date(tokens.expires_at * 1000))
 } else {
-  console.error("Failed to refresh tokens");
+  console.error('Failed to refresh tokens')
 }
 ```
 
 ### Example 3: Check Token Status
 
 ```typescript
-import { prisma } from "@/lib/prisma";
+import { prisma } from '@/lib/prisma'
 
 const account = await prisma.account.findFirst({
-  where: { userId, provider: "google" },
-});
+  where: { userId, provider: 'google' },
+})
 
 if (account) {
-  const isExpired = Date.now() >= (account.expires_at || 0) * 1000;
-  console.log("Token expired:", isExpired);
-  console.log("Expires at:", new Date((account.expires_at || 0) * 1000));
+  const isExpired = Date.now() >= (account.expires_at || 0) * 1000
+  console.log('Token expired:', isExpired)
+  console.log('Expires at:', new Date((account.expires_at || 0) * 1000))
 }
 ```
 
@@ -157,8 +160,8 @@ if (account) {
 
 ```typescript
 function isTokenExpired(expiresAt: number | null, bufferSeconds = 60): boolean {
-  if (!expiresAt) return true;
-  return Date.now() >= (expiresAt - bufferSeconds) * 1000;
+  if (!expiresAt) return true
+  return Date.now() >= (expiresAt - bufferSeconds) * 1000
 }
 ```
 
@@ -209,13 +212,15 @@ function isTokenExpired(expiresAt: number | null, bufferSeconds = 60): boolean {
 ```typescript
 // Force refresh by setting old expiration
 await prisma.account.update({
-  where: { /* ... */ },
+  where: {
+    /* ... */
+  },
   data: { expires_at: Math.floor(Date.now() / 1000) - 3600 },
-});
+})
 
 // Trigger refresh
-const tokens = await refreshUserTokens(userId, "google");
-console.log("Refreshed:", tokens !== null);
+const tokens = await refreshUserTokens(userId, 'google')
+console.log('Refreshed:', tokens !== null)
 ```
 
 ## Monitoring
@@ -223,6 +228,7 @@ console.log("Refreshed:", tokens !== null);
 ### Logs
 
 In development mode, token refresh is logged:
+
 ```
 Token refresh check completed for user <userId>
 Successfully refreshed google token for user <userId>
@@ -237,6 +243,7 @@ Check `accounts.updatedAt` to see when tokens were last refreshed.
 ### Issue: Tokens not refreshing
 
 **Check**:
+
 1. Refresh token exists in database
 2. `expires_at` is set correctly
 3. JWT callback is being called
@@ -245,6 +252,7 @@ Check `accounts.updatedAt` to see when tokens were last refreshed.
 ### Issue: "Failed to refresh token"
 
 **Possible causes**:
+
 - Refresh token revoked by user
 - Google OAuth credentials invalid
 - Network connectivity issues
@@ -269,4 +277,3 @@ Check `accounts.updatedAt` to see when tokens were last refreshed.
 - [Google OAuth Token Refresh](https://developers.google.com/identity/protocols/oauth2/web-server#offline)
 - [NextAuth.js Callbacks](https://authjs.dev/getting-started/adapters/prisma#callbacks)
 - [Prisma Adapter Documentation](https://authjs.dev/getting-started/adapters/prisma)
-

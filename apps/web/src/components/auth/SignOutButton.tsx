@@ -1,11 +1,11 @@
-import { signOut } from "@/lib/auth";
+import { signOut } from '@/lib/auth'
 
 export function SignOutButton() {
   return (
     <form
       action={async () => {
-        "use server";
-        await signOut({ redirectTo: "/" });
+        'use server'
+        await signOut({ redirectTo: '/' })
       }}
     >
       <button
@@ -15,5 +15,5 @@ export function SignOutButton() {
         Sign Out
       </button>
     </form>
-  );
+  )
 }
