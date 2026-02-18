@@ -35,6 +35,10 @@ function getNextAuth() {
         Google({
           clientId: env.GOOGLE_CLIENT_ID,
           clientSecret: env.GOOGLE_CLIENT_SECRET,
+          // Safe for Google since emails are verified — allows signing in with
+          // a Google account whose email matches an existing user to auto-link
+          // instead of throwing OAuthAccountNotLinked error.
+          allowDangerousEmailAccountLinking: true,
           authorization: {
             params: {
               access_type: "offline",

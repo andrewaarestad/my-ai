@@ -65,59 +65,144 @@ function isTokenExpired(expiresAt: number | null, bufferSeconds = 60): boolean {
 }
 
 /**
- * Get a valid access token for a user, refreshing if expired
+ * Get a valid access token for a user, refreshing if expired.
  *
  * @param userId - User ID to get tokens for
  * @param provider - OAuth provider (default: "google")
+ * @param providerAccountId - Specific account to get tokens for. If omitted, returns the first account found.
  * @returns Valid access token, or null if unavailable
  */
 export async function getValidAccessToken(
   userId: string,
-  provider = "google"
+  provider = "google",
+  providerAccountId?: string
 ): Promise<string | null> {
-  const tokens = await refreshUserTokens(userId, provider);
+  const tokens = await refreshAccountTokens(userId, provider, providerAccountId);
   return tokens?.access_token || null;
 }
 
 /**
- * Refresh Google OAuth tokens for a user if expired
+ * Refresh tokens for ALL accounts of a user for a given provider.
+ * Called from the JWT callback to keep all linked accounts' tokens fresh.
  *
  * @param userId - User ID to refresh tokens for
  * @param provider - OAuth provider (default: "google")
- * @returns Updated account with fresh tokens, or null if refresh failed/not needed
+ * @returns true if any tokens were refreshed or are valid, false if no accounts exist
  */
 export async function refreshUserTokens(
   userId: string,
   provider = "google"
-): Promise<{
-  access_token: string;
-  expires_at: number;
-  refresh_token: string;
-} | null> {
+): Promise<{ access_token: string; expires_at: number; refresh_token: string } | null> {
   try {
-    // Find the user's account
-    const account = await prisma.account.findFirst({
-      where: {
-        userId,
-        provider,
-      },
+    const accounts = await prisma.account.findMany({
+      where: { userId, provider },
     });
 
-    if (!account) {
+    if (accounts.length === 0) {
       // eslint-disable-next-line no-console
-      console.warn(`No ${provider} account found for user ${userId}`);
+      console.warn(`No ${provider} accounts found for user ${userId}`);
+      return null;
+    }
+
+    let lastResult: { access_token: string; expires_at: number; refresh_token: string } | null = null;
+
+    for (const account of accounts) {
+      if (!account.refresh_token) {
+        // eslint-disable-next-line no-console
+        console.warn(`No refresh token for account ${account.providerAccountId}`);
+        continue;
+      }
+
+      if (!isTokenExpired(account.expires_at)) {
+        // Token still valid — track it but don't refresh
+        lastResult = {
+          access_token: account.access_token || "",
+          expires_at: account.expires_at || 0,
+          refresh_token: account.refresh_token,
+        };
+        continue;
+      }
+
+      try {
+        // eslint-disable-next-line no-console
+        console.log(`Refreshing ${provider} token for account ${account.providerAccountId}`);
+
+        const newTokens = await refreshGoogleToken(account.refresh_token);
+
+        await prisma.account.update({
+          where: {
+            provider_providerAccountId: {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+            },
+          },
+          data: {
+            access_token: newTokens.access_token,
+            expires_at: newTokens.expires_at,
+            refresh_token: newTokens.refresh_token,
+            updatedAt: new Date(),
+          },
+        });
+
+        // eslint-disable-next-line no-console
+        console.log(`Successfully refreshed ${provider} token for account ${account.providerAccountId}`);
+
+        lastResult = {
+          access_token: newTokens.access_token,
+          expires_at: newTokens.expires_at,
+          refresh_token: newTokens.refresh_token,
+        };
+      } catch (error) {
+        // Log but continue to next account — one failing shouldn't block others
+        // eslint-disable-next-line no-console
+        console.error(
+          `Error refreshing ${provider} token for account ${account.providerAccountId}:`,
+          error
+        );
+      }
+    }
+
+    return lastResult;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error refreshing ${provider} tokens for user ${userId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Refresh tokens for a specific account (by providerAccountId) or the first
+ * account found for the user.
+ *
+ * @param userId - User ID
+ * @param provider - OAuth provider
+ * @param providerAccountId - Specific account ID (optional)
+ */
+async function refreshAccountTokens(
+  userId: string,
+  provider: string,
+  providerAccountId?: string
+): Promise<{ access_token: string; expires_at: number; refresh_token: string } | null> {
+  try {
+    const account = providerAccountId
+      ? await prisma.account.findUnique({
+          where: {
+            provider_providerAccountId: { provider, providerAccountId },
+          },
+        })
+      : await prisma.account.findFirst({
+          where: { userId, provider },
+        });
+
+    if (!account || account.userId !== userId) {
       return null;
     }
 
     if (!account.refresh_token) {
-      // eslint-disable-next-line no-console
-      console.warn(`No refresh token found for user ${userId}`);
       return null;
     }
 
-    // Check if token needs refreshing
     if (!isTokenExpired(account.expires_at)) {
-      // Token is still valid
       return {
         access_token: account.access_token || "",
         expires_at: account.expires_at || 0,
@@ -125,13 +210,8 @@ export async function refreshUserTokens(
       };
     }
 
-    // Token is expired, refresh it
-    // eslint-disable-next-line no-console
-    console.log(`Refreshing ${provider} token for user ${userId}`);
-
     const newTokens = await refreshGoogleToken(account.refresh_token);
 
-    // Update account in database
     await prisma.account.update({
       where: {
         provider_providerAccountId: {
@@ -147,9 +227,6 @@ export async function refreshUserTokens(
       },
     });
 
-    // eslint-disable-next-line no-console
-    console.log(`Successfully refreshed ${provider} token for user ${userId}`);
-
     return {
       access_token: newTokens.access_token,
       expires_at: newTokens.expires_at,
@@ -157,8 +234,7 @@ export async function refreshUserTokens(
     };
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error(`Error refreshing ${provider} token for user ${userId}:`, error);
+    console.error(`Error refreshing token for account:`, error);
     return null;
   }
 }
-
