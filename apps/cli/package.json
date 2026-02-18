@@ -1,0 +1,26 @@
+{
+  "name": "@my-ai/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "auth:google": "tsx src/auth-google.ts",
+    "sync:gmail": "tsx src/sync-gmail.ts",
+    "data:search": "tsx src/search.ts",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "dependencies": {
+    "@my-ai/core": "workspace:*",
+    "@my-ai/sync": "workspace:*"
+  },
+  "devDependencies": {
+    "@my-ai/eslint-config": "workspace:*",
+    "@my-ai/typescript-config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "eslint": "^8.57.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  }
+}

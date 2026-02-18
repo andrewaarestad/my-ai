@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import type { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+import { edgeEnv } from "./environment";
 
 // Extend the built-in session type (must match auth.ts)
 declare module "next-auth" {
@@ -18,21 +19,21 @@ declare module "next-auth" {
 
 /**
  * Lightweight NextAuth configuration for middleware
- * 
+ *
  * This version doesn't import Prisma or other heavy dependencies,
  * making it suitable for Edge runtime (Vercel middleware).
- * 
+ *
  * Since we use JWT sessions, middleware only needs to verify the JWT token,
  * which doesn't require database access.
- * 
+ *
  * IMPORTANT: This must use the same secret and JWT configuration as the
  * main auth config in auth.ts to ensure JWT tokens are compatible.
  */
 export const { auth } = NextAuth({
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || "dummy-client-id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy-client-secret",
+      clientId: edgeEnv.GOOGLE_CLIENT_ID,
+      clientSecret: edgeEnv.GOOGLE_CLIENT_SECRET,
     }),
   ],
   // Use JWT strategy for Edge runtime compatibility
@@ -40,7 +41,7 @@ export const { auth } = NextAuth({
     strategy: "jwt",
   },
   // Must use same secret as main auth config
-  secret: process.env.NEXTAUTH_SECRET || "dummy-secret-for-build",
+  secret: edgeEnv.NEXTAUTH_SECRET,
   callbacks: {
     // Minimal JWT callback - just pass through the token
     // The main auth.ts adds user.id, but middleware can read it without this callback
@@ -59,4 +60,3 @@ export const { auth } = NextAuth({
   // No adapter needed in middleware - JWT sessions don't require DB
   // No events needed - middleware doesn't handle sign-in/sign-out
 });
-

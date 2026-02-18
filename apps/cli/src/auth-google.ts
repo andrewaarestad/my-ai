@@ -1,5 +1,3 @@
-#!/usr/bin/env npx tsx
-
 /**
  * Google OAuth Authentication CLI
  *
@@ -9,6 +7,12 @@
  */
 
 import { runGoogleAuthFlow, getGoogleAuthClient } from "@my-ai/core/auth";
+import { env } from "./environment.js";
+
+const googleConfig = {
+  clientId: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+};
 
 async function main() {
   const args = process.argv.slice(2);
@@ -31,7 +35,7 @@ Options:
   }
 
   if (checkOnly) {
-    const client = await getGoogleAuthClient();
+    const client = await getGoogleAuthClient(googleConfig);
     if (client) {
       console.log("✓ Already authenticated with Google");
       process.exit(0);
@@ -43,13 +47,13 @@ Options:
   }
 
   // Check if already authenticated
-  const existingClient = await getGoogleAuthClient();
+  const existingClient = await getGoogleAuthClient(googleConfig);
   if (existingClient) {
     console.log("Already authenticated with Google.");
     console.log("Re-authenticating will replace existing tokens.\n");
   }
 
-  await runGoogleAuthFlow();
+  await runGoogleAuthFlow(googleConfig);
 }
 
 main().catch((error) => {

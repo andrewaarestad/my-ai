@@ -25,9 +25,9 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate || echo 'Skipping Prisma generation (DATABASE_URL not set)'",
-    "auth:google": "tsx scripts/auth-google.ts",
-    "sync:gmail": "tsx scripts/sync-gmail.ts",
-    "data:search": "tsx scripts/search.ts"
+    "auth:google": "pnpm --filter @my-ai/cli auth:google",
+    "sync:gmail": "pnpm --filter @my-ai/cli sync:gmail",
+    "data:search": "pnpm --filter @my-ai/cli data:search"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { env } from "./environment";
 
 /**
  * Google OAuth token response type
@@ -24,8 +25,8 @@ async function refreshGoogleToken(refreshToken: string) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     }),

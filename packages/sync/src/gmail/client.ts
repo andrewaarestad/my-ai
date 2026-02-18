@@ -1,7 +1,7 @@
 // Gmail API client
 // TODO: Extract from apps/web/src/lib/gmail-client.ts in Phase 1.3
 
-import { getGoogleAuthClient } from "@my-ai/core/auth";
+import { getGoogleAuthClient, type GoogleAuthConfig } from "@my-ai/core/auth";
 
 interface GmailMessageHeader {
   name: string;
@@ -78,8 +78,10 @@ export interface ParsedMessage {
 export class GmailClient {
   private baseUrl = "https://gmail.googleapis.com/gmail/v1";
 
+  constructor(private authConfig: GoogleAuthConfig) {}
+
   private async getAccessToken(): Promise<string> {
-    const client = await getGoogleAuthClient();
+    const client = await getGoogleAuthClient(this.authConfig);
     if (!client) {
       throw new Error("Not authenticated with Google. Run: npm run auth:google");
     }
@@ -257,6 +259,6 @@ export class GmailClient {
   }
 }
 
-export function createGmailClient(): GmailClient {
-  return new GmailClient();
+export function createGmailClient(config: GoogleAuthConfig): GmailClient {
+  return new GmailClient(config);
 }

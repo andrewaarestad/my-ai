@@ -1,5 +1,3 @@
-#!/usr/bin/env npx tsx
-
 /**
  * Gmail Sync CLI
  *
@@ -13,6 +11,12 @@
 import { createGmailClient, createGmailSyncService } from "@my-ai/sync/gmail";
 import { getGoogleAuthClient } from "@my-ai/core/auth";
 import { prisma } from "@my-ai/core/db";
+import { env } from "./environment.js";
+
+const googleConfig = {
+  clientId: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+};
 
 interface CliOptions {
   full: boolean;
@@ -76,7 +80,7 @@ async function main() {
   const options = parseArgs();
 
   // Check authentication
-  const authClient = await getGoogleAuthClient();
+  const authClient = await getGoogleAuthClient(googleConfig);
   if (!authClient) {
     console.error("Not authenticated with Google.");
     console.error("Run: npm run auth:google");
@@ -84,7 +88,7 @@ async function main() {
   }
 
   // Get user email from Gmail profile
-  const gmailClient = createGmailClient();
+  const gmailClient = createGmailClient(googleConfig);
   const profile = await gmailClient.getProfile();
 
   if (options.verbose) {

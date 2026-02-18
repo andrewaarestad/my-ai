@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { AuthErrorInfo } from '@/types/auth-errors';
-import { shouldShowDetailedErrors, getEnvironmentName } from '@/lib/env';
+import { env } from '@/lib/environment';
 
 interface AuthErrorProps {
   error: AuthErrorInfo;
@@ -19,13 +19,13 @@ interface AuthErrorProps {
 export function AuthError({ error, technicalDetails }: AuthErrorProps) {
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [copied, setCopied] = useState(false);
-  const isDetailed = shouldShowDetailedErrors();
+  const isDetailed = !env.isProduction;
 
   const copyToClipboard = () => {
     const details = `
 Error Code: ${error.code}
 Title: ${error.title}
-Environment: ${getEnvironmentName()}
+Environment: ${env.environment}
 User Message: ${error.userMessage}
 Technical Message: ${error.technicalMessage}
 
@@ -93,7 +93,7 @@ ${technicalDetails ? `\nAdditional Details:\n${technicalDetails}` : ''}
       {/* Environment Badge */}
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center rounded-md bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-400 ring-1 ring-inset ring-yellow-500/20">
-          {getEnvironmentName()} Environment - Detailed Error Display
+          {env.environment.charAt(0).toUpperCase() + env.environment.slice(1)} Environment - Detailed Error Display
         </span>
         <button
           onClick={copyToClipboard}

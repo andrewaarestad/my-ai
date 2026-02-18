@@ -3,6 +3,11 @@ import { createServer, type IncomingMessage, type ServerResponse } from "http";
 import { URL } from "url";
 import { loadTokens, saveTokens } from "./storage.js";
 
+export interface GoogleAuthConfig {
+  clientId: string;
+  clientSecret: string;
+}
+
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/calendar.readonly",
@@ -11,19 +16,10 @@ const SCOPES = [
 const REDIRECT_PORT = 3456;
 const REDIRECT_URI = `http://localhost:${REDIRECT_PORT}/callback`;
 
-function getOAuth2Client(): OAuth2Client {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    throw new Error(
-      "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in environment"
-    );
-  }
-
+function getOAuth2Client(config: GoogleAuthConfig): OAuth2Client {
   return new OAuth2Client({
-    clientId,
-    clientSecret,
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
     redirectUri: REDIRECT_URI,
   });
 }
@@ -33,14 +29,14 @@ function getOAuth2Client(): OAuth2Client {
  * Returns null if no tokens are stored.
  * Automatically refreshes tokens if expired.
  */
-export async function getGoogleAuthClient(): Promise<OAuth2Client | null> {
+export async function getGoogleAuthClient(config: GoogleAuthConfig): Promise<OAuth2Client | null> {
   const tokens = await loadTokens();
 
   if (!tokens.google) {
     return null;
   }
 
-  const client = getOAuth2Client();
+  const client = getOAuth2Client(config);
   client.setCredentials({
     access_token: tokens.google.access_token,
     refresh_token: tokens.google.refresh_token,
@@ -78,8 +74,8 @@ export async function getGoogleAuthClient(): Promise<OAuth2Client | null> {
  * Run the interactive OAuth flow.
  * Opens browser, waits for callback, saves tokens.
  */
-export async function runGoogleAuthFlow(): Promise<void> {
-  const client = getOAuth2Client();
+export async function runGoogleAuthFlow(config: GoogleAuthConfig): Promise<void> {
+  const client = getOAuth2Client(config);
 
   const authUrl = client.generateAuthUrl({
     access_type: "offline",

@@ -1,4 +1,4 @@
-export { getGoogleAuthClient, runGoogleAuthFlow } from "./google.js";
+export { getGoogleAuthClient, runGoogleAuthFlow, type GoogleAuthConfig } from "./google.js";
 export {
   saveTokens,
   loadTokens,

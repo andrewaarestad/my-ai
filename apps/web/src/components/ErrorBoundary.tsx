@@ -2,7 +2,7 @@
 
 import { Component, type ReactNode } from 'react';
 import { logError } from '@/lib/error-logger';
-import { shouldShowDetailedErrors, getEnvironmentName } from '@/lib/env';
+import { env } from '@/lib/environment';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -69,7 +69,7 @@ export class ErrorBoundary extends Component<
       }
 
       // Default error UI
-      const isDetailed = shouldShowDetailedErrors();
+      const isDetailed = !env.isProduction;
       const { error, errorInfo } = this.state;
 
       // Production: Simple error message
@@ -130,7 +130,7 @@ export class ErrorBoundary extends Component<
             {/* Environment Badge */}
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center rounded-md bg-yellow-500/10 px-2 py-1 text-xs font-medium text-yellow-400 ring-1 ring-inset ring-yellow-500/20">
-                {getEnvironmentName()} Environment - Error Boundary
+                {env.environment.charAt(0).toUpperCase() + env.environment.slice(1)} Environment - Error Boundary
               </span>
             </div>
 

@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { refreshUserTokens } from "./token-refresh";
 import { logInfo } from "./error-logger";
-import { isDevelopment, isProduction } from "./env";
+import { env } from "./environment";
 
 // Extend the built-in session type
 declare module "next-auth" {
@@ -26,12 +26,11 @@ declare module "next-auth" {
 // OAuth tokens are stored in database via Prisma adapter
 const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  // NextAuth v5 reads AUTH_SECRET by default, but our env uses NEXTAUTH_SECRET
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           // Request offline access to get refresh token
@@ -70,7 +69,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+        secure: env.isSecure,
       },
     },
     state: {
@@ -79,7 +78,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+        secure: env.isSecure,
       },
     },
     callbackUrl: {
@@ -88,16 +87,16 @@ const { handlers, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+        secure: env.isSecure,
       },
     },
     sessionToken: {
-      name: `${process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction() ? "__Secure-" : ""}authjs.session-token`,
+      name: `${env.isSecure ? "__Secure-" : ""}authjs.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction(),
+        secure: env.isSecure,
       },
     },
   },
@@ -128,7 +127,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
                 const refreshed = await refreshUserTokens(token.id, "google");
                 if (refreshed) {
                   token.lastTokenRefresh = now;
-                  if (isDevelopment()) {
+                  if (env.isDevelopment) {
                     await logInfo("Token refresh check completed", {
                       userId: token.id,
                     });
@@ -136,7 +135,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
                 }
               } catch (error) {
                 // Log error but don't fail the request
-                if (isDevelopment()) {
+                if (env.isDevelopment) {
                   await logInfo("Error refreshing tokens in JWT callback", {
                     userId: token.id,
                     error: error instanceof Error ? error.message : String(error),
@@ -164,7 +163,7 @@ const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     async signIn({ user, account }) {
       // Log successful sign-ins in development/preview for debugging
-      if (isDevelopment()) {
+      if (env.isDevelopment) {
         await logInfo("User signed in successfully", {
           userId: user.id,
           email: user.email || undefined,
@@ -174,12 +173,12 @@ const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async signOut() {
       // Log sign-outs in development for debugging
-      if (isDevelopment()) {
+      if (env.isDevelopment) {
         await logInfo("User signed out");
       }
     },
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: env.isDevelopment,
 });
 
 // Export individual functions to avoid TS2742 error with declaration generation

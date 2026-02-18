@@ -7,7 +7,7 @@
  * - Production: Minimal logging, sanitized data
  */
 
-import { getEnvironment, isDevelopment, isProduction } from './env';
+import { env } from './environment';
 
 export type ErrorLevel = 'error' | 'warn' | 'info' | 'debug';
 
@@ -43,7 +43,7 @@ function sanitize(value: unknown): unknown {
       .replace(/secret[=:]\s*\S+/gi, 'secret=[REDACTED]')
       .replace(/client_secret[=:]\s*\S+/gi, 'client_secret=[REDACTED]');
     // Redact email addresses in production only
-    if (isProduction()) {
+    if (env.isProduction) {
       sanitized = sanitized.replace(/[\w.-]+@[\w.-]+\.\w+/g, '[EMAIL]');
     }
     return sanitized;
@@ -53,7 +53,7 @@ function sanitize(value: unknown): unknown {
     const sanitized: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(value)) {
       // Skip sensitive keys entirely in production
-      if (isProduction() && /password|secret|token|key|auth/i.test(key)) {
+      if (env.isProduction && /password|secret|token|key|auth/i.test(key)) {
         sanitized[key] = '[REDACTED]';
       } else {
         sanitized[key] = sanitize(val);
@@ -70,7 +70,7 @@ function sanitize(value: unknown): unknown {
  */
 function formatError(error: unknown): string {
   if (error instanceof Error) {
-    if (isDevelopment()) {
+    if (env.isDevelopment) {
       return `${error.name}: ${error.message}\n${error.stack || ''}`;
     }
     return `${error.name}: ${error.message}`;
@@ -80,7 +80,7 @@ function formatError(error: unknown): string {
     return error;
   }
 
-  return JSON.stringify(error, null, isDevelopment() ? 2 : 0);
+  return JSON.stringify(error, null, env.isDevelopment ? 2 : 0);
 }
 
 /**
@@ -95,12 +95,12 @@ function createLogEntry(
   const entry: LogEntry = {
     level,
     message: sanitize(message) as string,
-    environment: getEnvironment(),
+    environment: env.environment,
     timestamp: new Date().toISOString(),
   };
 
   if (error) {
-    entry.error = isDevelopment() ? error : formatError(error);
+    entry.error = env.isDevelopment ? error : formatError(error);
   }
 
   if (context) {
@@ -135,7 +135,7 @@ function logToConsole(entry: LogEntry): void {
       break;
 
     case 'debug':
-      if (isDevelopment()) {
+      if (env.isDevelopment) {
         console.debug(prefix, entry.message);
         if (entry.context) console.debug('Context:', entry.context);
       }
@@ -157,7 +157,7 @@ function logToConsole(entry: LogEntry): void {
 function logToExternalService(entry: LogEntry): void {
   // TODO: Implement external logging service integration
   // Example:
-  // if (isProduction()) {
+  // if (env.isProduction) {
   //   await fetch('/api/logs', {
   //     method: 'POST',
   //     body: JSON.stringify(entry),
@@ -165,7 +165,7 @@ function logToExternalService(entry: LogEntry): void {
   // }
 
   // For now, we just log to console in non-development environments
-  if (!isDevelopment()) {
+  if (!env.isDevelopment) {
     // In production/preview, you might want to batch logs or send to monitoring service
     // For now, we'll just use console
     logToConsole(entry);
@@ -185,7 +185,7 @@ async function log(
   const entry = createLogEntry(level, message, error, context);
 
   // Always log to console in development
-  if (isDevelopment()) {
+  if (env.isDevelopment) {
     logToConsole(entry);
     return;
   }
