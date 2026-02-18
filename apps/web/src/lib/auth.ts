@@ -172,7 +172,8 @@ function getNextAuth() {
 }
 
 // Lazy wrappers that forward to the singleton on first call.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// NextAuth's return types aren't fully exported, so we use `any` for the proxy layer.
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 type AnyFunction = (...args: any[]) => any;
 
 export const handlers = {
@@ -188,3 +189,4 @@ export const signIn = ((...args: any[]) =>
 
 export const signOut = ((...args: any[]) =>
   (getNextAuth().signOut as AnyFunction)(...args)) as AnyFunction;
+/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */

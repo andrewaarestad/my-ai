@@ -149,7 +149,7 @@ async function main() {
     for (const result of results) {
       console.log(`[${result.source}] ${result.title}`);
       if (result.metadata?.from) {
-        console.log(`  From: ${result.metadata.from}`);
+        console.log(`  From: ${String(result.metadata.from)}`);
       }
       console.log(`  Date: ${result.date.toISOString()}`);
       if (result.snippet) {
@@ -162,8 +162,8 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch(async (error) => {
-  console.error("Search failed:", error.message);
+main().catch(async (error: unknown) => {
+  console.error("Search failed:", error instanceof Error ? error.message : error);
   await prisma.$disconnect();
   process.exit(1);
 });

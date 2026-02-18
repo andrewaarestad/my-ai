@@ -135,8 +135,8 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch(async (error) => {
-  console.error("Sync failed:", error.message);
+main().catch(async (error: unknown) => {
+  console.error("Sync failed:", error instanceof Error ? error.message : error);
   await prisma.$disconnect();
   process.exit(1);
 });

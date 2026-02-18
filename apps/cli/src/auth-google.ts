@@ -56,7 +56,7 @@ Options:
   await runGoogleAuthFlow(googleConfig);
 }
 
-main().catch((error) => {
-  console.error("Authentication failed:", error.message);
+main().catch((error: unknown) => {
+  console.error("Authentication failed:", error instanceof Error ? error.message : error);
   process.exit(1);
 });
