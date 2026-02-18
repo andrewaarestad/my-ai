@@ -1,30 +1,152 @@
 # Plan: Centralized Environment Variable Management
 
 ## Goal
-Create typed `environment.ts` files that are the **sole** point of `process.env` access. They validate required vars at import time and export a strongly-typed object. No other file in the codebase should use `process.env`.
 
-## Design Decisions
+Create typed `environment.ts` files that are the **sole** point of `process.env` access. They validate required vars at import time and export a strongly-typed object. No code outside of `environment.ts` files should use `process.env`.
 
-### Two environment files (not shared)
-- **`apps/web/src/lib/environment.ts`** — for the Next.js app
-- **`packages/core/src/environment.ts`** — for CLI tools / the core package
+## Core Pattern
 
-Shared packages (`@my-ai/sync`, `@my-ai/ui`) should NOT reference env vars. They receive configuration as function parameters.
-
-### Special handling: `NODE_ENV` and `VERCEL_ENV`
-These are runtime/platform metadata, not app configuration. They'll be included in the typed object but are **optional** (never throw on missing). `NODE_ENV` is used by Prisma client singletons and NextAuth debug mode. `VERCEL_ENV` is used for environment detection.
-
-### Special handling: Edge middleware (`auth-middleware.ts`)
-The Edge middleware runs in a restricted runtime and must remain lightweight. It already uses dummy fallbacks for build-time. It will import from `environment.ts` but use the **optional** accessors (no throw) since env vars may not be available during the Edge build step.
-
-### Cookie `secure` flag
-`auth.ts` currently reads `process.env.NEXTAUTH_URL?.startsWith("https://")` inline in cookie config. This will be replaced with a derived `isSecure` boolean computed in `environment.ts`.
+- Each **app** in `apps/` gets an `environment.ts` — this is the only place `process.env` is read
+- **Packages** (`packages/core`, `packages/sync`, etc.) never read `process.env` — they receive config as function/constructor parameters
+- `scripts/` moves into `apps/cli/` as a proper workspace package with its own `environment.ts`
 
 ---
 
-## Files to Create
+## Phase 1: Move `scripts/` → `apps/cli/`
 
-### 1. `apps/web/src/lib/environment.ts`
+### Create `apps/cli/`
+
+New package structure:
+
+```
+apps/cli/
+├── package.json          # name: "@my-ai/cli", depends on @my-ai/core, @my-ai/sync
+├── tsconfig.json
+├── src/
+│   ├── environment.ts    # CLI env var access (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+│   ├── auth-google.ts    # moved from scripts/auth-google.ts
+│   ├── sync-gmail.ts     # moved from scripts/sync-gmail.ts
+│   └── search.ts         # moved from scripts/search.ts
+```
+
+### Move CLI scripts from root `package.json` into `apps/cli/package.json`
+
+Remove these from root `package.json`:
+```diff
+- "auth:google": "tsx scripts/auth-google.ts",
+- "sync:gmail": "tsx scripts/sync-gmail.ts",
+- "data:search": "tsx scripts/search.ts"
+```
+
+Add them to `apps/cli/package.json`:
+```json
+{
+  "name": "@my-ai/cli",
+  "scripts": {
+    "auth:google": "tsx src/auth-google.ts",
+    "sync:gmail": "tsx src/sync-gmail.ts",
+    "data:search": "tsx src/search.ts"
+  }
+}
+```
+
+These can then be run from the repo root via:
+- `pnpm --filter @my-ai/cli auth:google`
+- `pnpm --filter @my-ai/cli sync:gmail`
+- `pnpm --filter @my-ai/cli data:search "query"`
+
+Or with turbo if desired.
+
+### Delete `scripts/` directory
+
+---
+
+## Phase 2: Make `@my-ai/core` env-free
+
+### `packages/core/src/auth/google.ts`
+
+Change `getOAuth2Client()` to accept config instead of reading `process.env`:
+
+```ts
+// Before
+function getOAuth2Client(): OAuth2Client {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw ...
+  return new OAuth2Client({ clientId, clientSecret, redirectUri: REDIRECT_URI });
+}
+
+// After
+export interface GoogleAuthConfig {
+  clientId: string;
+  clientSecret: string;
+}
+
+function getOAuth2Client(config: GoogleAuthConfig): OAuth2Client {
+  return new OAuth2Client({
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+    redirectUri: REDIRECT_URI,
+  });
+}
+```
+
+Update all exported functions (`getGoogleAuthClient`, `runGoogleAuthFlow`) to accept `config: GoogleAuthConfig` and thread it through.
+
+### `packages/core/src/db/client.ts`
+
+The Prisma singleton reads `NODE_ENV` for log levels and the dev singleton pattern. Two options:
+
+**Option A** — Accept a config parameter:
+```ts
+export function createPrismaClient(opts?: { verbose?: boolean }): PrismaClient { ... }
+```
+
+**Option B** — Leave `NODE_ENV` as-is. It's a Node.js runtime standard, not app config. Prisma itself reads `DATABASE_URL` from `process.env` internally, so the package already implicitly depends on env. `NODE_ENV` is in the same category.
+
+**Recommendation: Option B.** `NODE_ENV` is a runtime convention, not app configuration. Treating it the same as `GOOGLE_CLIENT_ID` adds complexity for no real benefit. The rule becomes: **no app-specific env vars in packages; `NODE_ENV` is acceptable as a universal runtime convention.**
+
+### Update `packages/core/src/auth/index.ts` exports
+
+Re-export the `GoogleAuthConfig` type so consumers can import it.
+
+---
+
+## Phase 3: Create `apps/cli/src/environment.ts`
+
+```ts
+function required(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+export const env = {
+  GOOGLE_CLIENT_ID: required("GOOGLE_CLIENT_ID"),
+  GOOGLE_CLIENT_SECRET: required("GOOGLE_CLIENT_SECRET"),
+};
+```
+
+### Update CLI scripts to use it
+
+Each script imports `env` and passes config to `@my-ai/core`:
+
+```ts
+// apps/cli/src/auth-google.ts
+import { env } from "./environment";
+import { runGoogleAuthFlow, getGoogleAuthClient } from "@my-ai/core/auth";
+
+// Pass env to core functions
+await runGoogleAuthFlow({ clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET });
+```
+
+Same pattern for `sync-gmail.ts` (passes config to `getGoogleAuthClient`) and `search.ts` (only uses `@my-ai/core/db` which doesn't need app config).
+
+---
+
+## Phase 4: Create `apps/web/src/lib/environment.ts`
 
 ```ts
 function required(name: string): string {
@@ -40,139 +162,99 @@ function optional(name: string): string | undefined {
 }
 
 export const env = {
-  // Required — throws at import time if missing
   GOOGLE_CLIENT_ID: required("GOOGLE_CLIENT_ID"),
   GOOGLE_CLIENT_SECRET: required("GOOGLE_CLIENT_SECRET"),
   NEXTAUTH_SECRET: required("NEXTAUTH_SECRET"),
   NEXTAUTH_URL: required("NEXTAUTH_URL"),
-  // Note: DATABASE_URL and DIRECT_URL are read by Prisma directly from env,
-  // not by our application code — no need to validate here
 
-  // Optional — platform/runtime metadata
   NODE_ENV: optional("NODE_ENV") ?? "development",
   VERCEL_ENV: optional("VERCEL_ENV"),
 
-  // Derived
-  get isDevelopment() {
-    return this.VERCEL_ENV === undefined && this.NODE_ENV === "development";
+  get isDevelopment(): boolean {
+    return !this.VERCEL_ENV && this.NODE_ENV === "development";
   },
-  get isProduction() {
+  get isProduction(): boolean {
     return this.VERCEL_ENV === "production" || (!this.VERCEL_ENV && this.NODE_ENV === "production");
   },
-  get isPreview() {
+  get isPreview(): boolean {
     return this.VERCEL_ENV === "preview";
   },
-  get isSecure() {
+  get isSecure(): boolean {
     return this.NEXTAUTH_URL.startsWith("https://") || this.isProduction;
   },
-} as const;
+};
+
+/**
+ * Edge-safe env access — returns fallbacks instead of throwing.
+ * Used by auth-middleware.ts which runs in Edge runtime where env
+ * vars may not be available during the build step.
+ */
+export const edgeEnv = {
+  GOOGLE_CLIENT_ID: optional("GOOGLE_CLIENT_ID") ?? "missing-client-id",
+  GOOGLE_CLIENT_SECRET: optional("GOOGLE_CLIENT_SECRET") ?? "missing-client-secret",
+  NEXTAUTH_SECRET: optional("NEXTAUTH_SECRET") ?? "missing-secret",
+};
 ```
 
-### 2. `packages/core/src/environment.ts`
+### Update web app files to use `env`
 
-```ts
-function required(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
-function optional(name: string): string | undefined {
-  return process.env[name] || undefined;
-}
-
-export const env = {
-  GOOGLE_CLIENT_ID: required("GOOGLE_CLIENT_ID"),
-  GOOGLE_CLIENT_SECRET: required("GOOGLE_CLIENT_SECRET"),
-  NODE_ENV: optional("NODE_ENV") ?? "development",
-} as const;
-```
-
----
-
-## Files to Modify
-
-### 3. `apps/web/src/lib/auth.ts`
-- Add `import { env } from "./environment";`
-- Remove `import { isDevelopment, isProduction } from "./env";`
+**`apps/web/src/lib/auth.ts`**
+- Import `{ env }` from `"./environment"`
+- Remove import of `isDevelopment, isProduction` from `"./env"`
 - Replace all `process.env.GOOGLE_CLIENT_ID` → `env.GOOGLE_CLIENT_ID`
 - Replace all `process.env.GOOGLE_CLIENT_SECRET` → `env.GOOGLE_CLIENT_SECRET`
-- Replace all `process.env.NEXTAUTH_SECRET` → `env.NEXTAUTH_SECRET`
+- Replace `process.env.NEXTAUTH_SECRET` → `env.NEXTAUTH_SECRET`
 - Replace `process.env.NEXTAUTH_URL?.startsWith("https://") ?? isProduction()` → `env.isSecure`
-- Replace session token name expression similarly
-- Replace `process.env.NODE_ENV === "development"` → `env.isDevelopment`
+- Replace session token name prefix expression → use `env.isSecure`
 - Replace `isDevelopment()` → `env.isDevelopment`
+- Replace `process.env.NODE_ENV === "development"` → `env.isDevelopment`
 
-### 4. `apps/web/src/lib/auth-middleware.ts`
-- Import `env` from `./environment` using a **lazy** pattern since this runs in Edge:
-  ```ts
-  // Edge-safe: read env vars at call time, not import time
-  function getEnv() { ... }
-  ```
-  Actually, better approach: since the middleware needs dummy fallbacks for build time, we keep a small inline helper here that reads `process.env` with fallbacks. **OR** we add an `optional()` variant to `environment.ts` and use that. Since the middleware is a special edge case, the cleanest approach is to have `environment.ts` export an `edgeEnv` object with fallback values, or simply accept that this one file is the exception.
+**`apps/web/src/lib/auth-middleware.ts`**
+- Import `{ edgeEnv }` from `"./environment"`
+- Replace `process.env.GOOGLE_CLIENT_ID || "dummy-client-id"` → `edgeEnv.GOOGLE_CLIENT_ID`
+- Replace `process.env.GOOGLE_CLIENT_SECRET || "dummy-client-secret"` → `edgeEnv.GOOGLE_CLIENT_SECRET`
+- Replace `process.env.NEXTAUTH_SECRET || "dummy-secret-for-build"` → `edgeEnv.NEXTAUTH_SECRET`
 
-  **Decision:** We'll add a separate `environmentEdge.ts` file or a section in `environment.ts` that exports edge-safe vars with fallbacks. The simplest approach: `auth-middleware.ts` imports from `environment.ts` but uses a dedicated `edgeEnv` export that doesn't throw.
-
-  Updated plan: `environment.ts` will export both:
-  - `env` — throws on missing required vars (for server-side code)
-  - `edgeEnv` — returns fallback values for edge/build-time (for middleware)
-
-### 5. `apps/web/src/lib/token-refresh.ts`
-- Add `import { env } from "./environment";`
+**`apps/web/src/lib/token-refresh.ts`**
+- Import `{ env }` from `"./environment"`
 - Replace `process.env.GOOGLE_CLIENT_ID!` → `env.GOOGLE_CLIENT_ID`
 - Replace `process.env.GOOGLE_CLIENT_SECRET!` → `env.GOOGLE_CLIENT_SECRET`
 
-### 6. `apps/web/src/lib/env.ts`
-- Delete this file (its functionality is subsumed by `environment.ts` derived properties)
-
-### 7. `apps/web/src/lib/env-validation.ts`
-- Delete this file (validation now happens at import time in `environment.ts`)
-
-### 8. `apps/web/src/lib/prisma.ts`
-- Add `import { env } from "./environment";`
+**`apps/web/src/lib/prisma.ts`**
+- Import `{ env }` from `"./environment"`
 - Replace `process.env.NODE_ENV === "development"` → `env.isDevelopment`
 - Replace `process.env.NODE_ENV !== "production"` → `!env.isProduction`
 
-### 9. `apps/web/src/lib/error-logger.ts` (if it uses `env.ts`)
-- Update imports from `./env` to `./environment`
-- Replace function calls like `isDevelopment()` → `env.isDevelopment`
+**`apps/web/src/lib/error-logger.ts`**
+- Import `{ env }` from `"./environment"`
+- Remove import from `"./env"`
+- Replace `getEnvironment()` → `env.VERCEL_ENV ?? env.NODE_ENV` (or add a `get environment()` getter to env)
+- Replace `isDevelopment()` → `env.isDevelopment`
+- Replace `isProduction()` → `env.isProduction`
 
-### 10. `packages/core/src/auth/google.ts`
-- Add `import { env } from "../environment";`
-- Replace `process.env.GOOGLE_CLIENT_ID` → `env.GOOGLE_CLIENT_ID`
-- Replace `process.env.GOOGLE_CLIENT_SECRET` → `env.GOOGLE_CLIENT_SECRET`
-- Remove the manual `if (!clientId || !clientSecret)` check (now handled by `environment.ts`)
+### Delete obsolete files
 
-### 11. `packages/core/src/db/client.ts`
-- Add `import { env } from "../environment";`
-- Replace `process.env.NODE_ENV === "development"` → `env.NODE_ENV === "development"`
-- Replace `process.env.NODE_ENV !== "production"` → `env.NODE_ENV !== "production"`
-
-### 12. Update any remaining imports of `env.ts` or `env-validation.ts`
-- Search for `from "./env"` or `from "../env"` across the web app and update to `from "./environment"` or equivalent.
+- `apps/web/src/lib/env.ts` — replaced by `environment.ts` derived properties
+- `apps/web/src/lib/env-validation.ts` — replaced by `environment.ts` import-time validation
 
 ---
 
-## Files NOT Modified
-- `.env.example` files — documentation, no code changes needed
-- `docs/` — documentation only
-- `.github/actions/` — GitHub Actions env vars are set by CI, not app code
-- `turbo.json` — no env var handling currently
-- `prisma/schema.prisma` — Prisma reads `DATABASE_URL` and `DIRECT_URL` directly via its own `env()` function in the schema; this is Prisma's mechanism and not something we control
+## Phase 5: Verify
+
+1. `grep -r "process\.env" apps/ packages/ --include="*.ts" --include="*.tsx"` — should only appear in:
+   - `apps/web/src/lib/environment.ts`
+   - `apps/cli/src/environment.ts`
+   - `packages/core/src/db/client.ts` (`NODE_ENV` only — acceptable)
+2. `pnpm build` — verify everything compiles
+3. `pnpm lint` — verify no lint errors
+4. `pnpm type-check` — verify types
 
 ---
 
-## Order of Operations
-1. Create `packages/core/src/environment.ts`
-2. Update `packages/core/src/auth/google.ts` and `packages/core/src/db/client.ts`
-3. Create `apps/web/src/lib/environment.ts` (with both `env` and `edgeEnv`)
-4. Update `apps/web/src/lib/auth.ts`
-5. Update `apps/web/src/lib/auth-middleware.ts`
-6. Update `apps/web/src/lib/token-refresh.ts`
-7. Update `apps/web/src/lib/prisma.ts`
-8. Update `apps/web/src/lib/error-logger.ts` and any other files importing from `./env`
-9. Delete `apps/web/src/lib/env.ts` and `apps/web/src/lib/env-validation.ts`
-10. Grep for any remaining `process.env` in `apps/` and `packages/` (excluding `node_modules`) to ensure none remain
-11. Build to verify everything compiles
+## Summary of `process.env` access points (after)
+
+| File | Env Vars | Justification |
+|------|----------|---------------|
+| `apps/web/src/lib/environment.ts` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NODE_ENV`, `VERCEL_ENV` | Web app entrypoint |
+| `apps/cli/src/environment.ts` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | CLI app entrypoint |
+| `packages/core/src/db/client.ts` | `NODE_ENV` | Runtime convention (same as Prisma's own `DATABASE_URL` read) |
