@@ -11,3 +11,18 @@ body {
   color: var(--foreground);
   background: var(--background);
 }
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-slide-in 0.2s ease-out;
+}
