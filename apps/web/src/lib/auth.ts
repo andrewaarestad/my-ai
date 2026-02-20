@@ -132,7 +132,9 @@ function getNextAuth() {
                         select: { id: true },
                       })
                       if (!userExists) {
-                        console.warn(`User ${token.id} no longer exists in database, invalidating session`)
+                        console.warn(
+                          `User ${token.id} no longer exists in database, invalidating session`
+                        )
                         token.id = undefined
                       }
                       token.lastTokenRefresh = now

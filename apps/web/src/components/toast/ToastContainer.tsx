@@ -52,7 +52,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <div
       role="alert"
-      className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border ${style.border} ${style.bg} p-4 shadow-lg backdrop-blur-sm animate-toast-in`}
+      className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border ${style.border} ${style.bg} animate-toast-in p-4 shadow-lg backdrop-blur-sm`}
     >
       <svg
         className={`h-5 w-5 flex-shrink-0 ${style.color}`}
@@ -72,7 +72,13 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         className="-mr-1 -mt-1 flex-shrink-0 rounded p-1 text-gray-400 hover:text-gray-200"
         aria-label="Dismiss"
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+          stroke="currentColor"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
