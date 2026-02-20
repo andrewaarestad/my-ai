@@ -124,6 +124,18 @@ function getNextAuth() {
                           userId: token.id,
                         })
                       }
+                    } else {
+                      // No accounts found — verify user still exists in database.
+                      // Handles stale JWTs after DB recreation or user deletion.
+                      const userExists = await prisma.user.findUnique({
+                        where: { id: token.id },
+                        select: { id: true },
+                      })
+                      if (!userExists) {
+                        console.warn(`User ${token.id} no longer exists in database, invalidating session`)
+                        token.id = undefined
+                      }
+                      token.lastTokenRefresh = now
                     }
                   } catch (error) {
                     if (env.isDevelopment) {

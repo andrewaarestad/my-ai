@@ -10,8 +10,9 @@ export const dynamic = 'force-dynamic'
 export default async function TodoPage() {
   const session = await auth()
 
-  // Redirect to signin if not authenticated
-  if (!session?.user) {
+  // Redirect to signin if not authenticated or session has no valid user ID
+  // (e.g. stale JWT after DB recreation)
+  if (!session?.user?.id) {
     redirect('/auth/signin')
   }
 
