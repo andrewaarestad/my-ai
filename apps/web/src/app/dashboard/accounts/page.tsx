@@ -15,7 +15,7 @@ interface Props {
 export default async function AccountsPage({ searchParams }: Props) {
   const session = await auth()
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect('/auth/signin')
   }
 

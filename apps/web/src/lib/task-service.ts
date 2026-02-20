@@ -1,5 +1,5 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from './prisma'
-import type { Prisma } from '@prisma/client'
 
 export class TaskListService {
   constructor(private userId: string) {}
@@ -31,13 +31,21 @@ export class TaskListService {
 
     const maxOrder = await this.getMaxOrder()
 
-    return prisma.taskListItem.create({
-      data: {
-        text: text.trim(),
-        userId: this.userId,
-        order: maxOrder + 1,
-      },
-    })
+    try {
+      return await prisma.taskListItem.create({
+        data: {
+          text: text.trim(),
+          userId: this.userId,
+          order: maxOrder + 1,
+        },
+      })
+    } catch (error) {
+      // P2003 = foreign key constraint violation (user doesn't exist in DB)
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new Error('User account not found. Please sign out and sign back in.')
+      }
+      throw error
+    }
   }
 
   /**

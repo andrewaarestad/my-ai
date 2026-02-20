@@ -143,6 +143,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(accountsUrl.toString())
   }
 
+  // Verify user still exists before creating the Account row
+  const user = await prisma.user.findUnique({
+    where: { id: linkData.userId },
+    select: { id: true },
+  })
+  if (!user) {
+    accountsUrl.searchParams.set('link_error', 'user_not_found')
+    return NextResponse.redirect(accountsUrl.toString())
+  }
+
   // Create new Account row linked to the current user
   await prisma.account.create({
     data: {

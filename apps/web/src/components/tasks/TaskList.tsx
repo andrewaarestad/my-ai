@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { TaskListItemComponent } from './TaskListItem'
 import { api } from '@/lib/api/client'
 import { CreateTaskDto, UpdateTaskDto, TaskResponseDto, type TaskDto } from '@/lib/dto/task.dto'
+import { useToast } from '@/components/toast/ToastContext'
 import type { TaskListItem } from '@prisma/client'
 
 interface Props {
@@ -15,6 +16,7 @@ export function TaskList({ initialTasks }: Props) {
   const [isCreating, setIsCreating] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const newTaskInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   const handleComplete = async (id: string) => {
     try {
@@ -27,6 +29,7 @@ export function TaskList({ initialTasks }: Props) {
       setTasks(tasks.filter((t) => t.id !== id))
     } catch (error) {
       console.error('Failed to complete task:', error)
+      toast('Failed to complete task. Please try again.', { type: 'error' })
     }
   }
 
@@ -40,6 +43,7 @@ export function TaskList({ initialTasks }: Props) {
       setTasks(tasks.map((t) => (t.id === id ? response.task : t)))
     } catch (error) {
       console.error('Failed to update task:', error)
+      toast('Failed to update task. Please try again.', { type: 'error' })
     }
   }
 
@@ -57,6 +61,7 @@ export function TaskList({ initialTasks }: Props) {
       setIsCreating(false)
     } catch (error) {
       console.error('Failed to create task:', error)
+      toast('Failed to create task. Please try again.', { type: 'error' })
     }
   }
 

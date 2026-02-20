@@ -8,8 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function Dashboard() {
   const session = await auth()
 
-  // Redirect to signin if not authenticated
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect('/auth/signin')
   }
 
