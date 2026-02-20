@@ -24,6 +24,7 @@ This guide will walk you through setting up Google OAuth for the My AI platform.
    - **Google Drive API** (for drive data access)
 
    > **Note:** For user profile information, you do not need to enable any specific API. The OAuth scopes (`openid`, `userinfo.email`, `userinfo.profile`) are sufficient.
+
 ## Step 3: Configure OAuth Consent Screen
 
 1. Navigate to "APIs & Services" > "OAuth consent screen"
@@ -64,11 +65,13 @@ This guide will walk you through setting up Google OAuth for the My AI platform.
 ## Step 5: Configure Environment Variables
 
 1. Copy the `.env.example` file to `.env`:
+
    ```bash
    cp apps/web/.env.example apps/web/.env
    ```
 
 2. Update the `.env` file with your Google OAuth credentials:
+
    ```env
    # Google OAuth
    GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
@@ -114,16 +117,19 @@ You need to set up a PostgreSQL database before you can use authentication. You 
 ## Step 7: Run Database Migrations
 
 1. Generate the Prisma client:
+
    ```bash
    pnpm prisma generate
    ```
 
 2. Push the database schema:
+
    ```bash
    pnpm prisma db push
    ```
 
    Or create a migration:
+
    ```bash
    pnpm prisma migrate dev --name init
    ```
@@ -131,6 +137,7 @@ You need to set up a PostgreSQL database before you can use authentication. You 
 ## Step 8: Test the Integration
 
 1. Start the development server:
+
    ```bash
    pnpm dev
    ```
@@ -148,6 +155,7 @@ You need to set up a PostgreSQL database before you can use authentication. You 
 This error means the redirect URI in your Google Cloud Console doesn't match the one being used by your app.
 
 **Solution**: Make sure the redirect URI in Google Cloud Console exactly matches:
+
 - `http://localhost:3000/api/auth/callback/google` for local development
 - `https://your-domain.com/api/auth/callback/google` for production
 
@@ -156,6 +164,7 @@ This error means the redirect URI in your Google Cloud Console doesn't match the
 This usually happens when the OAuth consent screen is not fully configured.
 
 **Solution**:
+
 1. Go back to the OAuth consent screen settings
 2. Make sure all required fields are filled in
 3. Add your email as a test user
@@ -166,6 +175,7 @@ This usually happens when the OAuth consent screen is not fully configured.
 This happens when your app requests sensitive or restricted scopes but hasn't been verified by Google.
 
 **Solution**:
+
 1. For development/testing, keep the app in "Testing" mode in the OAuth consent screen
 2. Add test users who need access
 3. For production, you may need to go through Google's verification process
@@ -173,6 +183,7 @@ This happens when your app requests sensitive or restricted scopes but hasn't be
 ### Database Connection Errors
 
 **Solution**:
+
 1. Make sure your database is running and accessible
 2. Check that the `DATABASE_URL` and `DIRECT_URL` are correct
 3. Make sure you've run `pnpm prisma generate` and `pnpm prisma db push`

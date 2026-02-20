@@ -18,6 +18,7 @@ We're using a **hybrid approach**:
 **Storage**: JWT token stored in a cookie (NOT in database)
 
 **Configuration**:
+
 ```typescript
 session: {
   strategy: "jwt",  // ← Using JWT, not database sessions
@@ -25,6 +26,7 @@ session: {
 ```
 
 **What's in the JWT**:
+
 - User ID
 - Last token refresh timestamp
 - Encrypted and signed by NextAuth
@@ -40,13 +42,15 @@ session: {
 **Storage**: Database (`accounts` table)
 
 **Configuration**:
+
 ```typescript
 adapter: PrismaAdapter(prisma),  // ← Stores OAuth tokens in DB
 ```
 
 **What's in the database** (`accounts` table):
+
 - `access_token` - Google API access token
-- `refresh_token` - Google API refresh token  
+- `refresh_token` - Google API refresh token
 - `expires_at` - Token expiration timestamp
 - `provider` - "google"
 - `userId` - Links to user
@@ -58,12 +62,14 @@ adapter: PrismaAdapter(prisma),  // ← Stores OAuth tokens in DB
 ### JWT Sessions (Why Not Database Sessions?)
 
 ✅ **Pros**:
+
 - Edge runtime compatible (works on Vercel Edge)
 - No database query needed on every request
 - Faster (no DB lookup)
 - Stateless
 
 ❌ **Cons**:
+
 - Can't revoke sessions from server-side easily  
   _Note: With database-stored OAuth tokens (as implemented), you can partially mitigate this by deleting the user's account or token records from the database, which prevents further token refresh and effectively revokes access._
 - Session data limited by cookie size
@@ -71,12 +77,14 @@ adapter: PrismaAdapter(prisma),  // ← Stores OAuth tokens in DB
 ### Database OAuth Tokens (Why Not JWT?)
 
 ✅ **Pros**:
+
 - Tokens are large (would bloat cookies)
 - Need to refresh tokens (requires DB updates)
 - Secure server-side storage
 - Can query tokens for API calls
 
 ❌ **Cons**:
+
 - Requires database query to get tokens
 
 ## Visual Diagram
@@ -115,11 +123,13 @@ adapter: PrismaAdapter(prisma),  // ← Stores OAuth tokens in DB
 ## What Gets Stored Where?
 
 ### In Browser Cookie (JWT):
+
 - ✅ User ID
 - ✅ Last refresh check timestamp
 - ❌ NOT OAuth tokens (too large, security risk)
 
 ### In Database (`accounts` table):
+
 - ✅ Google access_token
 - ✅ Google refresh_token
 - ✅ Token expiration time
@@ -127,6 +137,7 @@ adapter: PrismaAdapter(prisma),  // ← Stores OAuth tokens in DB
 - ❌ NOT session data (using JWT instead)
 
 ### In Database (`sessions` table):
+
 - ❌ **NOT USED** (empty table)
 - Table exists but NextAuth doesn't write to it with JWT strategy
 
@@ -163,6 +174,7 @@ session: {
 ```
 
 **Trade-offs**:
+
 - ✅ Can revoke sessions server-side
 - ✅ More session data storage
 - ❌ Requires DB query on every request
@@ -170,13 +182,12 @@ session: {
 
 ## Summary
 
-| Aspect | Session Management | OAuth Token Storage |
-|--------|-------------------|---------------------|
-| **Storage** | JWT (Cookie) | Database (`accounts`) |
-| **Purpose** | Identify logged-in user | Call Google APIs |
-| **Strategy** | `jwt` | `database` (via adapter) |
-| **Table Used** | None (JWT) | `accounts` |
-| **Table Unused** | `sessions` | N/A |
+| Aspect           | Session Management      | OAuth Token Storage      |
+| ---------------- | ----------------------- | ------------------------ |
+| **Storage**      | JWT (Cookie)            | Database (`accounts`)    |
+| **Purpose**      | Identify logged-in user | Call Google APIs         |
+| **Strategy**     | `jwt`                   | `database` (via adapter) |
+| **Table Used**   | None (JWT)              | `accounts`               |
+| **Table Unused** | `sessions`              | N/A                      |
 
 **Key Point**: We're using **JWT for sessions** and **database for OAuth tokens**. These serve different purposes and can coexist!
-

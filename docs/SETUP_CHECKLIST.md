@@ -47,6 +47,7 @@ Choose one of the following options:
 Follow the detailed guide: [Google OAuth Setup Guide](./GOOGLE_OAUTH_SETUP.md)
 
 **Quick summary:**
+
 1. Create a Google Cloud project
 2. Enable required APIs (Google+, Calendar, Gmail, Drive)
 3. Configure OAuth consent screen
@@ -151,11 +152,13 @@ pnpm dev
 ### Issue: "redirect_uri_mismatch"
 
 **Solution:** Make sure the redirect URI in Google Cloud Console matches exactly:
+
 - `http://localhost:3000/api/auth/callback/google`
 
 ### Issue: Database connection errors
 
 **Solution:**
+
 1. Verify `DATABASE_URL` is correct
 2. Check that your database is running and accessible
 3. For Vercel Postgres, make sure you're using both `DATABASE_URL` and `DIRECT_URL`
@@ -163,6 +166,7 @@ pnpm dev
 ### Issue: "NEXTAUTH_SECRET is not defined"
 
 **Solution:**
+
 1. Generate a secret: `openssl rand -base64 32`
 2. Add it to `apps/web/.env` as `NEXTAUTH_SECRET=your-generated-secret`
 

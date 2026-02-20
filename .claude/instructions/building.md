@@ -47,6 +47,7 @@ pnpm build
 ```
 
 This command:
+
 - Builds all packages in dependency order
 - Uses Turborepo caching
 - Runs in parallel where possible
@@ -60,11 +61,13 @@ pnpm dev
 ## Understanding Build Outputs
 
 ### apps/web (Next.js)
+
 - **Output**: `.next/` directory
 - **Build tool**: Next.js with Turbopack
 - **Notes**: Optimized for production deployment
 
 ### packages/ui
+
 - **Output**: `dist/` directory
 - **Build tool**: tsup
 - **Formats**: CommonJS and ESM
@@ -94,6 +97,7 @@ pnpm turbo run build --force
 ### Issue: "Module not found" errors
 
 **Solution:**
+
 1. Ensure dependencies are installed: `pnpm install`
 2. Check if the package is built: `pnpm --filter <package-name> build`
 3. Clear cache and rebuild: `rm -rf .turbo && pnpm build`
@@ -101,6 +105,7 @@ pnpm turbo run build --force
 ### Issue: Type errors in builds
 
 **Solution:**
+
 1. Run type-check: `pnpm type-check`
 2. Fix TypeScript errors
 3. Rebuild: `pnpm build`
@@ -108,6 +113,7 @@ pnpm turbo run build --force
 ### Issue: Stale cache causing issues
 
 **Solution:**
+
 ```bash
 # Full clean and rebuild
 pnpm clean
@@ -125,6 +131,7 @@ pnpm build
 ## Continuous Integration
 
 GitHub Actions automatically runs builds on PRs. The workflow:
+
 1. Installs dependencies
 2. Restores Turborepo cache
 3. Runs `pnpm turbo run build`

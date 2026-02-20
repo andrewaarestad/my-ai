@@ -32,6 +32,7 @@ services/
 ## Configuration
 
 Services should:
+
 - Extend from `@my-ai/typescript-config/node.json`
 - Extend from `@my-ai/eslint-config/node`
 - Include test setup with Vitest
@@ -50,6 +51,7 @@ Services should:
 ## Deployment
 
 Services can be deployed to:
+
 - **Google Cloud Run**: Containerized services
 - **AWS Lambda**: Serverless functions
 - **Vercel Functions**: API routes

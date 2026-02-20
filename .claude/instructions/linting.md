@@ -111,6 +111,7 @@ The monorepo uses shared ESLint configs:
 ## Lint Rules Enforced
 
 ### TypeScript
+
 - Strict type checking
 - No unused variables (except prefixed with `_`)
 - No explicit `any` (warning)
@@ -119,11 +120,13 @@ The monorepo uses shared ESLint configs:
 - No misused promises
 
 ### React
+
 - No prop-types (using TypeScript)
 - Exhaustive deps for hooks
 - React 19 JSX runtime
 
 ### Code Quality
+
 - No console.log (except console.warn/error)
 - Proper case sensitivity in filenames
 - ES2022+ features
@@ -133,6 +136,7 @@ The monorepo uses shared ESLint configs:
 ### Issue: "Lint errors on CI but not locally"
 
 **Solution:**
+
 ```bash
 # Ensure you're using the same Node version
 node -v  # Should be 22.x
@@ -146,6 +150,7 @@ pnpm lint:fix
 ### Issue: "Too many lint errors"
 
 **Solution:**
+
 ```bash
 # Auto-fix everything you can
 pnpm lint:fix
@@ -159,6 +164,7 @@ pnpm lint
 ### Issue: "ESLint config not found"
 
 **Solution:**
+
 ```bash
 # Install dependencies
 pnpm install
@@ -180,6 +186,7 @@ ls -la node_modules/@my-ai/eslint-config
 GitHub Actions runs `pnpm turbo run lint` on every PR.
 
 **Before pushing:**
+
 ```bash
 # Auto-fix all issues
 pnpm lint:fix

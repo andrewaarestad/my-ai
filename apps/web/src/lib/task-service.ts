@@ -1,5 +1,5 @@
-import { prisma } from './prisma';
-import type { Prisma } from '@prisma/client';
+import { prisma } from './prisma'
+import type { Prisma } from '@prisma/client'
 
 export class TaskListService {
   constructor(private userId: string) {}
@@ -8,17 +8,17 @@ export class TaskListService {
    * Get all tasks for the user
    */
   async getTasks(options: { includeCompleted?: boolean } = {}) {
-    const { includeCompleted = false } = options;
+    const { includeCompleted = false } = options
 
     const where: Prisma.TaskListItemWhereInput = {
       userId: this.userId,
       ...(includeCompleted ? {} : { completed: false }),
-    };
+    }
 
     return prisma.taskListItem.findMany({
       where,
       orderBy: { order: 'asc' },
-    });
+    })
   }
 
   /**
@@ -26,10 +26,10 @@ export class TaskListService {
    */
   async createTask(text: string) {
     if (!text || text.trim().length === 0) {
-      throw new Error('Task text cannot be empty');
+      throw new Error('Task text cannot be empty')
     }
 
-    const maxOrder = await this.getMaxOrder();
+    const maxOrder = await this.getMaxOrder()
 
     return prisma.taskListItem.create({
       data: {
@@ -37,7 +37,7 @@ export class TaskListService {
         userId: this.userId,
         order: maxOrder + 1,
       },
-    });
+    })
   }
 
   /**
@@ -45,29 +45,29 @@ export class TaskListService {
    */
   async updateTask(taskId: string, text: string) {
     if (!text || text.trim().length === 0) {
-      throw new Error('Task text cannot be empty');
+      throw new Error('Task text cannot be empty')
     }
 
     // Use atomic operation with userId in where clause to prevent race conditions
     const updated = await prisma.taskListItem.updateMany({
       where: { id: taskId, userId: this.userId },
       data: { text: text.trim() },
-    });
+    })
 
     if (updated.count === 0) {
-      throw new Error('Task not found or access denied');
+      throw new Error('Task not found or access denied')
     }
 
     // Return the updated task
     const task = await prisma.taskListItem.findUnique({
       where: { id: taskId },
-    });
+    })
 
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error('Task not found')
     }
 
-    return task;
+    return task
   }
 
   /**
@@ -81,22 +81,22 @@ export class TaskListService {
         completed: true,
         completedAt: new Date(),
       },
-    });
+    })
 
     if (updated.count === 0) {
-      throw new Error('Task not found or access denied');
+      throw new Error('Task not found or access denied')
     }
 
     // Return the updated task
     const task = await prisma.taskListItem.findUnique({
       where: { id: taskId },
-    });
+    })
 
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error('Task not found')
     }
 
-    return task;
+    return task
   }
 
   /**
@@ -106,13 +106,13 @@ export class TaskListService {
     // Use atomic operation with userId in where clause to prevent race conditions
     const deleted = await prisma.taskListItem.deleteMany({
       where: { id: taskId, userId: this.userId },
-    });
+    })
 
     if (deleted.count === 0) {
-      throw new Error('Task not found or access denied');
+      throw new Error('Task not found or access denied')
     }
 
-    return { id: taskId };
+    return { id: taskId }
   }
 
   /**
@@ -122,8 +122,8 @@ export class TaskListService {
     const result = await prisma.taskListItem.aggregate({
       where: { userId: this.userId },
       _max: { order: true },
-    });
-    return result._max.order ?? 0;
+    })
+    return result._max.order ?? 0
   }
 }
 
@@ -131,5 +131,5 @@ export class TaskListService {
  * Factory function to create a TaskListService instance
  */
 export function createTaskListService(userId: string) {
-  return new TaskListService(userId);
+  return new TaskListService(userId)
 }

@@ -11,12 +11,14 @@
 ## Completed
 
 ### Data model cleanup
+
 - [x] Dropped `ConnectedAccount` model (unused, duplicated `Account`)
 - [x] Dropped `VerificationToken` model (unused, no email/magic-link auth)
 - [x] Removed `connectedAccounts` relation from `User`
 - [x] Created migration
 
 ### Removed dead web Gmail code
+
 - [x] Deleted `apps/web/src/app/api/gmail/` (sync, messages, threads, cron routes + README)
 - [x] Deleted `apps/web/src/lib/gmail-client.ts`
 - [x] Deleted `apps/web/src/lib/gmail-sync.ts`
@@ -29,11 +31,13 @@
 ### Consolidate shared code into packages
 
 **Task service → `packages/core`**
+
 - Move `apps/web/src/lib/task-service.ts` to `packages/core/src/tasks/service.ts`
 - Export from `@my-ai/core/tasks`
 - Update web app API routes to import from the package
 
 **Consolidate Prisma client**
+
 - `packages/core/src/db/client.ts` and `apps/web/src/lib/prisma.ts` are duplicates
 - Update web app to import from `@my-ai/core/db`
 - Delete `apps/web/src/lib/prisma.ts`

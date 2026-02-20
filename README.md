@@ -80,6 +80,7 @@ The platform uses Google OAuth for authentication. To set it up:
    - Get your credentials from [Google Cloud Console](https://console.cloud.google.com/)
 
 3. **Set up environment variables**:
+
    ```bash
    # Copy the example file
    cp apps/web/.env.example apps/web/.env
@@ -88,6 +89,7 @@ The platform uses Google OAuth for authentication. To set it up:
    ```
 
 4. **Run database migrations**:
+
    ```bash
    # Generate Prisma client
    pnpm prisma generate
@@ -157,22 +159,22 @@ pnpm type-check
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development servers |
-| `pnpm build` | Build all packages |
-| `pnpm test` | Run all tests |
-| `pnpm test:watch` | Run tests in watch mode |
-| `pnpm lint` | Check for lint issues |
-| `pnpm lint:fix` | Auto-fix lint issues |
-| `pnpm type-check` | Run TypeScript type checking |
-| `pnpm format` | Format code with Prettier |
-| `pnpm clean` | Clean all build artifacts |
-| `pnpm pr-check` | Run all PR checks locally |
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:push` | Push schema to database (dev) |
-| `pnpm db:migrate` | Create and run migrations |
-| `pnpm db:studio` | Open Prisma Studio GUI |
+| Command            | Description                   |
+| ------------------ | ----------------------------- |
+| `pnpm dev`         | Start development servers     |
+| `pnpm build`       | Build all packages            |
+| `pnpm test`        | Run all tests                 |
+| `pnpm test:watch`  | Run tests in watch mode       |
+| `pnpm lint`        | Check for lint issues         |
+| `pnpm lint:fix`    | Auto-fix lint issues          |
+| `pnpm type-check`  | Run TypeScript type checking  |
+| `pnpm format`      | Format code with Prettier     |
+| `pnpm clean`       | Clean all build artifacts     |
+| `pnpm pr-check`    | Run all PR checks locally     |
+| `pnpm db:generate` | Generate Prisma client        |
+| `pnpm db:push`     | Push schema to database (dev) |
+| `pnpm db:migrate`  | Create and run migrations     |
+| `pnpm db:studio`   | Open Prisma Studio GUI        |
 
 ## Packages
 
@@ -239,6 +241,7 @@ Private - All Rights Reserved
 ## Support
 
 For issues or questions:
+
 - Check the [agent instructions](./.claude/instructions/)
 - Review [CONTRIBUTING.md](./CONTRIBUTING.md)
 - Open an issue on GitHub

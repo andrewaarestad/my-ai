@@ -7,11 +7,13 @@ The PR checks will fail for type-checking and building until you generate the Pr
 ### Why Type Checks Fail in CI
 
 The type check errors you see are:
+
 ```
 src/lib/auth.ts(2,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
 ```
 
 This happens because:
+
 1. Prisma client is generated based on your `prisma/schema.prisma`
 2. The client is generated **after** you connect to a database
 3. The generated client is not committed to git (it's in `.gitignore`)
@@ -35,10 +37,12 @@ Before running tests or type checks, you need to:
 For CI/CD to pass, you'll need to either:
 
 **Option A: Mock Database (Quick Fix)**
+
 - Add a `postinstall` script to generate Prisma client
 - Use a mock/test database URL in CI
 
 **Option B: Real Database (Production Approach)**
+
 - Set up a test database (e.g., Vercel Postgres preview database)
 - Add `DATABASE_URL` to your CI environment variables
 - Run `pnpm prisma generate` in your CI pipeline before tests

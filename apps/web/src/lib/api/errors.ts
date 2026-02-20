@@ -7,8 +7,8 @@ export class ApiError extends Error {
     public statusCode: number = 500,
     public code?: string
   ) {
-    super(message);
-    this.name = 'ApiError';
+    super(message)
+    this.name = 'ApiError'
   }
 }
 
@@ -17,8 +17,8 @@ export class ApiError extends Error {
  */
 export class BadRequestError extends ApiError {
   constructor(message: string = 'Bad Request', code?: string) {
-    super(message, 400, code);
-    this.name = 'BadRequestError';
+    super(message, 400, code)
+    this.name = 'BadRequestError'
   }
 }
 
@@ -27,8 +27,8 @@ export class BadRequestError extends ApiError {
  */
 export class UnauthorizedError extends ApiError {
   constructor(message: string = 'Unauthorized', code?: string) {
-    super(message, 401, code);
-    this.name = 'UnauthorizedError';
+    super(message, 401, code)
+    this.name = 'UnauthorizedError'
   }
 }
 
@@ -37,8 +37,8 @@ export class UnauthorizedError extends ApiError {
  */
 export class ForbiddenError extends ApiError {
   constructor(message: string = 'Forbidden', code?: string) {
-    super(message, 403, code);
-    this.name = 'ForbiddenError';
+    super(message, 403, code)
+    this.name = 'ForbiddenError'
   }
 }
 
@@ -47,8 +47,8 @@ export class ForbiddenError extends ApiError {
  */
 export class NotFoundError extends ApiError {
   constructor(message: string = 'Not Found', code?: string) {
-    super(message, 404, code);
-    this.name = 'NotFoundError';
+    super(message, 404, code)
+    this.name = 'NotFoundError'
   }
 }
 
@@ -57,7 +57,7 @@ export class NotFoundError extends ApiError {
  */
 export class InternalServerError extends ApiError {
   constructor(message: string = 'Internal Server Error', code?: string) {
-    super(message, 500, code);
-    this.name = 'InternalServerError';
+    super(message, 500, code)
+    this.name = 'InternalServerError'
   }
 }

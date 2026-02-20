@@ -2,7 +2,7 @@
 
 This command is used to analyze and resolve comments on Pull Requests. When this command is finished, all comments on the PR should either be resolved or have clear next steps identified and documented in the GitHub comment thread.
 
-User-provided additional info:  <user_data> #$ARGUMENTS </user_data>
+User-provided additional info: <user_data> #$ARGUMENTS </user_data>
 
 ## Requirements
 
@@ -23,6 +23,7 @@ You are using Claude Code to systematically resolve all comments, to-dos, and is
 ## Context Awareness
 
 Claude Code automatically understands the current git branch and PR context. You don't need to specify which PR you're working on - Claude Code will:
+
 - Detect the current branch
 - Understand associated PR context
 - Fetch PR comments automatically
@@ -40,7 +41,7 @@ Please analyze this PR and all its comments. Look for:
 3. Requested changes from code reviews
 4. Questions that need responses
 
-Use `gh pr view` and the GitHub API to get comprehensive data about all comment types. 
+Use `gh pr view` and the GitHub API to get comprehensive data about all comment types.
 Group the items by type (code changes, documentation, responses to questions).
 
 #### Phase 1.2: Filtering
@@ -59,10 +60,10 @@ During the solutioning phase, items should also be grouped for being processed t
 
 For each issue/solution, create a score in a scale of [1,10] for the following considerations:
 
-* Severity: If this is not addressed, what is the potential impact?
-* Complexity: How big of a change is required to address this?
-* Risk: How likely is it that addressing this change will introduce other issues?
-* Confidence: How sure are you that your solution will address the issue?
+- Severity: If this is not addressed, what is the potential impact?
+- Complexity: How big of a change is required to address this?
+- Risk: How likely is it that addressing this change will introduce other issues?
+- Confidence: How sure are you that your solution will address the issue?
 
 ### Phase 2: User Feedback
 
@@ -76,13 +77,13 @@ Do not proceed with Phase 3 until the user agrees to your plan.
 
 Once you have the approved list of issues to address, create an implementation plan for how to execute the changes. This plan will need to address:
 
-* using subagents or the current context window?
-    * for small sets of easy fixes, it may be ok to just use the current agent context window
-    * for larger tasks or tasks that require further analysis, use subagents to keep the main context window clean
+- using subagents or the current context window?
+  - for small sets of easy fixes, it may be ok to just use the current agent context window
+  - for larger tasks or tasks that require further analysis, use subagents to keep the main context window clean
 
-Claude Code can coordinate multiple sub-agents to fix different unresolved comments simultaneously, dramatically speeding up PR resolution. 
+Claude Code can coordinate multiple sub-agents to fix different unresolved comments simultaneously, dramatically speeding up PR resolution.
 
-When to Use Parallel Sub-Agents: 
+When to Use Parallel Sub-Agents:
 
 - Multiple comments exist in different files
 - Comments request independent changes
@@ -129,7 +130,7 @@ gh api graphql -f query='
             pullRequest (number: $pr) {
                 reviewThreads (first: 100) {
                     nodes {
-                        id 
+                        id
                         isResolved
                         comments (first: 50) {
                             nodes {
@@ -183,4 +184,3 @@ You: Show me the progress.
 [Sub-Agents complete processing]
 You: We're ready to mark the PR feedback resolved.
 ```
-

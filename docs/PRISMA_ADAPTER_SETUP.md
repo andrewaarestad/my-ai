@@ -21,6 +21,7 @@ NextAuth is now configured to use the **Prisma adapter**, which automatically st
 **File**: `apps/web/src/lib/auth.ts`
 
 **Changes**:
+
 - ✅ Added `PrismaAdapter` import from `@auth/prisma-adapter`
 - ✅ Added `prisma` import from `./prisma`
 - ✅ Added `adapter: PrismaAdapter(prisma)` to NextAuth config
@@ -63,27 +64,31 @@ NextAuth is now configured to use the **Prisma adapter**, which automatically st
 ✅ **Token Refresh Ready**: Refresh tokens stored for automatic renewal  
 ✅ **Multi-Account Support**: Can link multiple OAuth accounts per user  
 ✅ **Audit Trail**: All OAuth connections tracked in database  
-✅ **Secure**: Tokens stored server-side, not exposed in cookies  
+✅ **Secure**: Tokens stored server-side, not exposed in cookies
 
 ## Database Schema
 
 The Prisma adapter uses these tables:
 
 ### `users`
+
 - User accounts
 - One record per user
 
 ### `accounts`
+
 - OAuth provider accounts
 - Stores all OAuth tokens
 - Links to `users` via `userId`
 - Composite key: `[provider, providerAccountId]`
 
 ### `sessions`
+
 - Currently unused (using JWT sessions)
 - Available if switching to database sessions
 
 ### `verification_tokens`
+
 - Email verification tokens
 - Used for email-based auth flows
 
@@ -113,26 +118,26 @@ Navigate to `accounts` table - you should see OAuth tokens after signing in.
 ### 3. Query Tokens Programmatically
 
 ```typescript
-import { prisma } from "@/lib/prisma";
+import { prisma } from '@/lib/prisma'
 
 // Get user's Google account tokens
 const account = await prisma.account.findFirst({
   where: {
-    userId: "user-id",
-    provider: "google",
+    userId: 'user-id',
+    provider: 'google',
   },
-});
+})
 
 console.log({
   accessToken: account?.access_token,
   refreshToken: account?.refresh_token,
   expiresAt: account?.expires_at,
-});
+})
 ```
 
 ## Token Refresh
 
-The Prisma adapter stores refresh tokens, but **automatic token refresh is not yet implemented**. 
+The Prisma adapter stores refresh tokens, but **automatic token refresh is not yet implemented**.
 
 To implement token refresh:
 
@@ -147,6 +152,7 @@ See: [NextAuth Token Refresh Documentation](https://authjs.dev/getting-started/a
 ### Issue: "PrismaClient is not defined"
 
 **Solution**: Make sure Prisma client is generated:
+
 ```bash
 pnpm db:generate
 ```
@@ -154,6 +160,7 @@ pnpm db:generate
 ### Issue: Tokens not appearing in database
 
 **Check**:
+
 1. Verify adapter is configured: `adapter: PrismaAdapter(prisma)`
 2. Check database connection: `pnpm db:studio`
 3. Verify user signed in successfully
@@ -175,4 +182,3 @@ pnpm db:generate
 - [NextAuth Prisma Adapter Docs](https://authjs.dev/getting-started/adapters/prisma)
 - [Prisma Client Documentation](https://www.prisma.io/docs/concepts/components/prisma-client)
 - [NextAuth v5 Documentation](https://authjs.dev/)
-

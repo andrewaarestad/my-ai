@@ -83,6 +83,7 @@ pnpm pr-check
 ```
 
 This single command runs all checks that CI will run:
+
 1. ✅ Lint all packages
 2. ✅ Type check all packages
 3. ✅ Test all packages
@@ -156,6 +157,7 @@ pnpm pr-check
 ```
 
 **STOP!** Check the output:
+
 - ✅ If exit code is 0 and all checks pass → Proceed to commit and push
 - ❌ If ANY check fails → DO NOT commit or push, fix the errors first
 
@@ -167,6 +169,7 @@ git push -u origin feature/your-feature-name
 ```
 
 **For Agents:** You must verify that `pnpm pr-check` completed successfully before executing `git push`. Check for:
+
 1. Exit code 0
 2. All tasks showing as successful in Turborepo output
 3. No error messages in the output
@@ -180,6 +183,7 @@ git push -u origin feature/your-feature-name
 **Error**: ESLint errors in CI
 
 **Fix**:
+
 ```bash
 # Auto-fix lint issues (ALWAYS TRY THIS FIRST!)
 pnpm lint:fix
@@ -195,6 +199,7 @@ pnpm lint
 **Error**: TypeScript compilation errors
 
 **Fix**:
+
 ```bash
 # Check which packages have type errors
 pnpm type-check
@@ -209,6 +214,7 @@ pnpm type-check
 **Error**: Unit tests failing
 
 **Fix**:
+
 ```bash
 # Run tests to see failures
 pnpm test
@@ -223,6 +229,7 @@ pnpm test
 **Error**: Build process fails
 
 **Fix**:
+
 ```bash
 # Clear cache
 rm -rf .turbo
@@ -256,6 +263,7 @@ On every PR, GitHub Actions runs:
 ### CI Optimization
 
 CI uses caching for:
+
 - **pnpm store**: Faster dependency installation
 - **Turborepo cache**: Faster builds
 
@@ -316,6 +324,7 @@ type(scope): description
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -378,6 +387,7 @@ If PR checks are failing and you're stuck:
 ### Why This Matters
 
 Running the full suite (`pnpm pr-check`) ensures:
+
 - ✅ Code is properly linted and formatted
 - ✅ No type errors across all packages
 - ✅ All tests pass

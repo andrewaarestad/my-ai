@@ -33,7 +33,7 @@
   "devDependencies": {
     "@my-ai/eslint-config": "workspace:*",
     "@my-ai/typescript-config": "workspace:*",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.1.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
@@ -42,6 +42,6 @@
     "jsdom": "^25.0.1",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.9"
   }
 }

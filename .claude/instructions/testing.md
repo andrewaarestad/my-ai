@@ -177,6 +177,7 @@ it('accepts and uses props', () => {
 ### Issue: "Tests fail locally but pass in CI"
 
 **Solution:**
+
 - Ensure you're using Node 22.x
 - Clear cache: `rm -rf node_modules && pnpm install`
 - Check for local environment variables
@@ -184,6 +185,7 @@ it('accepts and uses props', () => {
 ### Issue: "Import errors in tests"
 
 **Solution:**
+
 - Verify test setup file is configured
 - Check vitest.config.ts for correct settings
 - Ensure dependencies are installed
@@ -191,11 +193,16 @@ it('accepts and uses props', () => {
 ### Issue: "Timeout errors"
 
 **Solution:**
+
 ```typescript
 // Increase timeout for specific test
-it('slow operation', async () => {
-  // test code
-}, { timeout: 10000 }) // 10 seconds
+it(
+  'slow operation',
+  async () => {
+    // test code
+  },
+  { timeout: 10000 }
+) // 10 seconds
 ```
 
 ## Future Testing Additions

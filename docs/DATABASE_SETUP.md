@@ -5,6 +5,7 @@ This guide will help you get your PostgreSQL database up and running for the My 
 ## Current Status
 
 ✅ **Prisma Schema**: Fully defined with all required tables:
+
 - `users` - User accounts
 - `accounts` - OAuth provider accounts (stores Google tokens)
 - `sessions` - User sessions
@@ -103,6 +104,7 @@ GOOGLE_CLIENT_SECRET="your-client-secret"
 ```
 
 **Important**: Both files need `DATABASE_URL` and `DIRECT_URL` because:
+
 - Root `.env` is used by Prisma CLI for migrations
 - `apps/web/.env` is used by the Next.js app at runtime
 
@@ -148,6 +150,7 @@ pnpm db:studio
 ```
 
 This opens a web interface at `http://localhost:5555` where you can:
+
 - View all tables
 - Browse data
 - Verify schema matches
@@ -182,7 +185,8 @@ echo $DATABASE_URL
 
 ### Issue: "Environment variable not found: DATABASE_URL"
 
-**Solution**: 
+**Solution**:
+
 1. Create `.env` file in project root
 2. Add `DATABASE_URL` and `DIRECT_URL`
 3. Make sure `.env` is listed in `.gitignore` (to prevent committing secrets), but ensure the file exists locally with your environment variables.
@@ -190,6 +194,7 @@ echo $DATABASE_URL
 ### Issue: "Can't reach database server"
 
 **Solution**:
+
 1. Verify connection strings are correct
 2. Check if database is accessible from your network
 3. For Vercel Postgres, ensure you're using the correct URLs (pooled vs non-pooling)
@@ -198,6 +203,7 @@ echo $DATABASE_URL
 ### Issue: "Migration failed" or "Schema push failed"
 
 **Solution**:
+
 1. Check database connection: `pnpm db:studio`
 2. Verify schema syntax: Check `prisma/schema.prisma` for errors
 3. Try `pnpm db:push --skip-generate` to skip client generation
@@ -205,7 +211,8 @@ echo $DATABASE_URL
 
 ### Issue: "Table already exists"
 
-**Solution**: 
+**Solution**:
+
 - If tables exist from a previous setup, you can:
   - Drop and recreate: `pnpm db:push --force-reset` (⚠️ **WARNING**: Deletes all data)
   - Or use migrations: `pnpm db:migrate` (safer, preserves data)
@@ -253,4 +260,3 @@ pnpm db:push --force-reset
 - [Vercel Postgres Docs](https://vercel.com/docs/storage/vercel-postgres)
 - [Supabase Docs](https://supabase.com/docs)
 - [NextAuth Prisma Adapter](https://authjs.dev/getting-started/adapters/prisma)
-

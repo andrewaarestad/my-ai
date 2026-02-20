@@ -11,12 +11,14 @@ Strip out SaaS complexity, build a CLI-first personal data system.
 ## Philosophy
 
 **Tools vs. Agents:**
+
 - **Tools** = Deterministic scripts that do one job well (sync, search, export)
 - **Agents** = LLM-powered workflows that decide which tools to use and interpret results
 
 Phase 1 builds **tools only**. Agentic workflows come later and simply invoke these tools.
 
 A tool doesn't know or care if it was run by:
+
 - A human typing `npm run sync:gmail`
 - Claude Code running the same command
 - A cron job
@@ -28,6 +30,7 @@ A tool doesn't know or care if it was run by:
 **Goal:** New package structure, auth working, Gmail syncing, basic search. All deterministic CLI commands.
 
 ### 1.1 Restructure codebase
+
 - [ ] Create `packages/core/` - shared utilities, db client, types
 - [ ] Create `packages/sync/` - data sync engines
 - [ ] Create `scripts/` - CLI entry points (not "skills" yet)
@@ -35,6 +38,7 @@ A tool doesn't know or care if it was run by:
 - [ ] Add npm scripts for common commands
 
 ### 1.2 Auth CLI
+
 - [ ] Create `packages/core/auth/google.ts` - localhost OAuth flow
 - [ ] Create `packages/core/auth/storage.ts` - token persistence (file or db)
 - [ ] Create `scripts/auth-google.ts` - CLI to run OAuth flow
@@ -42,6 +46,7 @@ A tool doesn't know or care if it was run by:
 - [ ] Test: run auth, verify tokens saved, can refresh
 
 ### 1.3 Gmail sync CLI
+
 - [ ] Extract gmail-client.ts → `packages/sync/gmail/client.ts`
 - [ ] Extract gmail-sync.ts → `packages/sync/gmail/sync.ts`
 - [ ] Refactor to use new auth module (remove NextAuth deps)
@@ -52,6 +57,7 @@ A tool doesn't know or care if it was run by:
 - [ ] Test: sync emails, verify in database
 
 ### 1.4 Search CLI
+
 - [ ] Add tsvector column + index to GmailMessage
 - [ ] Create migration for full-text search setup
 - [ ] Create `packages/search/index.ts` - query builder
@@ -61,12 +67,14 @@ A tool doesn't know or care if it was run by:
 - [ ] Test: search emails, verify results
 
 ### 1.5 CLI output standards
+
 - [ ] Define output formats: human-readable (default), JSON (--format=json)
 - [ ] Define exit codes: 0=success, 1=error, 2=no results
 - [ ] Add --quiet flag for scripting
 - [ ] Add --verbose flag for debugging
 
 **Deliverable:** Four working CLI commands:
+
 ```bash
 npm run auth:google          # One-time OAuth setup
 npm run sync:gmail           # Sync emails to database
@@ -81,6 +89,7 @@ npm run search "query"       # Search emails
 **Goal:** Add two more data sources with same CLI pattern.
 
 ### 2.1 Google Calendar sync
+
 - [ ] Create `packages/sync/calendar/client.ts`
 - [ ] Create `packages/sync/calendar/sync.ts`
 - [ ] Add CalendarEvent model to Prisma schema
@@ -90,6 +99,7 @@ npm run search "query"       # Search emails
 - [ ] Add calendar events to search index
 
 ### 2.2 Monarch integration
+
 - [ ] Research Monarch API (endpoints, auth, rate limits)
 - [ ] Create `packages/core/auth/apikeys.ts` - API key storage
 - [ ] Create `packages/sync/monarch/client.ts`
@@ -102,6 +112,7 @@ npm run search "query"       # Search emails
 - [ ] Add transactions to search index
 
 **Deliverable:**
+
 ```bash
 npm run sync:calendar        # Sync calendar events
 npm run sync:monarch         # Sync financial transactions
@@ -115,12 +126,14 @@ npm run search "query"       # Now searches emails + calendar + transactions
 **Goal:** CLI tools to read/write notes and tasks from Obsidian vault.
 
 ### 3.1 Setup Obsidian vault
+
 - [ ] Create vault directory (or use existing)
 - [ ] Configure sync (iCloud/Obsidian Sync)
 - [ ] Install Tasks plugin
 - [ ] Define folder structure (e.g., `notes/`, `tasks/`, `daily/`)
 
 ### 3.2 Obsidian CLI tools
+
 - [ ] Create `packages/obsidian/reader.ts` - parse markdown + frontmatter
 - [ ] Create `packages/obsidian/writer.ts` - create/update notes
 - [ ] Create `packages/obsidian/tasks.ts` - parse/write task format
@@ -132,12 +145,14 @@ npm run search "query"       # Now searches emails + calendar + transactions
 - [ ] Create `scripts/tasks-complete.ts`
 
 ### 3.3 Index notes in Postgres
+
 - [ ] Add Note model to schema
 - [ ] Create `scripts/sync-notes.ts` - index note content to Postgres
 - [ ] Add: `npm run sync:notes`
 - [ ] Add notes to unified search
 
 **Deliverable:**
+
 ```bash
 npm run notes:list                    # List all notes
 npm run notes:read "path/to/note"     # Read a note
@@ -155,12 +170,14 @@ npm run sync:notes                    # Index notes to Postgres for search
 **Goal:** Search across all data sources with one command.
 
 ### 4.1 Unified search index
+
 - [ ] Create SearchableContent table (or use materialized view)
 - [ ] Add tsvector indexes to all content tables
 - [ ] Create `packages/search/unified.ts`
 - [ ] Update `scripts/search.ts` to query all sources
 
 ### 4.2 Search CLI options
+
 - [ ] Add `--source=gmail,calendar,transactions,notes` filter
 - [ ] Add `--after=2024-01-01` and `--before=` date filters
 - [ ] Add `--limit=N` result limit
@@ -168,6 +185,7 @@ npm run sync:notes                    # Index notes to Postgres for search
 - [ ] Add result ranking/scoring by relevance
 
 **Deliverable:**
+
 ```bash
 npm run search "budget"                           # Search everything
 npm run search "meeting" -- --source=calendar     # Search only calendar
@@ -182,6 +200,7 @@ npm run search "project" -- --format=json         # JSON output for scripting
 **Goal:** Remove old SaaS code, document the CLI tools.
 
 ### 5.1 Delete unused code
+
 - [ ] Remove `apps/web/` (Next.js app)
 - [ ] Remove `packages/ui/` (React components)
 - [ ] Remove Vercel config
@@ -189,6 +208,7 @@ npm run search "project" -- --format=json         # JSON output for scripting
 - [ ] Clean up unused Prisma models (Session, etc.)
 
 ### 5.2 Documentation
+
 - [ ] Update README with new architecture
 - [ ] Document each CLI command (usage, args, output, exit codes)
 - [ ] Add setup instructions (env vars, database, OAuth setup)
@@ -201,6 +221,7 @@ npm run search "project" -- --format=json         # JSON output for scripting
 ## Future: Agentic Layer (Not in Scope)
 
 Once the CLI tools are solid, a future phase could add:
+
 - Agent workflows that orchestrate multiple CLI tools
 - Natural language interface to the tools
 - Automated insights/summaries
@@ -330,13 +351,13 @@ model Note {
 
 ## Estimated Effort
 
-| Phase | Scope | Estimate |
-|-------|-------|----------|
+| Phase   | Scope              | Estimate  |
+| ------- | ------------------ | --------- |
 | Phase 1 | Foundation + Gmail | 4-6 hours |
 | Phase 2 | Calendar + Monarch | 4-6 hours |
-| Phase 3 | Obsidian | 3-4 hours |
-| Phase 4 | Unified search | 2-3 hours |
-| Phase 5 | Cleanup | 1-2 hours |
+| Phase 3 | Obsidian           | 3-4 hours |
+| Phase 4 | Unified search     | 2-3 hours |
+| Phase 5 | Cleanup            | 1-2 hours |
 
 **Total:** ~15-20 hours of implementation
 
@@ -347,17 +368,20 @@ model Note {
 All scripts follow these conventions:
 
 **Output:**
+
 - Default: Human-readable text
 - `--format=json`: Structured JSON for scripting/piping
 - `--quiet`: Suppress non-essential output
 - `--verbose`: Debug output
 
 **Exit codes:**
+
 - `0`: Success
 - `1`: Error (with message to stderr)
 - `2`: No results found (for search)
 
 **Arguments:**
+
 - Use `--` to separate npm script args: `npm run search "query" -- --limit=10`
 - Flags use GNU-style: `--flag=value` or `--flag value`
 

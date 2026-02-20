@@ -22,15 +22,15 @@ export type AuthErrorCode =
   | 'EmailSignin'
   | 'CredentialsSignin'
   | 'SessionRequired'
-  | 'Default';
+  | 'Default'
 
 export interface AuthErrorInfo {
-  code: AuthErrorCode;
-  title: string;
-  userMessage: string;
-  technicalMessage: string;
-  troubleshootingSteps: string[];
-  possibleCauses: string[];
+  code: AuthErrorCode
+  title: string
+  userMessage: string
+  technicalMessage: string
+  troubleshootingSteps: string[]
+  possibleCauses: string[]
 }
 
 /**
@@ -62,7 +62,8 @@ export const AUTH_ERROR_MAP: Record<AuthErrorCode, AuthErrorInfo> = {
   AccessDenied: {
     code: 'AccessDenied',
     title: 'Access Denied',
-    userMessage: 'You do not have permission to sign in. Please contact support if you believe this is an error.',
+    userMessage:
+      'You do not have permission to sign in. Please contact support if you believe this is an error.',
     technicalMessage: 'User denied consent or does not meet access requirements',
     possibleCauses: [
       'User clicked "Cancel" on Google consent screen',
@@ -163,11 +164,7 @@ export const AUTH_ERROR_MAP: Record<AuthErrorCode, AuthErrorInfo> = {
     title: 'Account Creation Error',
     userMessage: 'We could not create your account. Please try again.',
     technicalMessage: 'Failed to create account via email',
-    possibleCauses: [
-      'Database error',
-      'Email already registered',
-      'Invalid email format',
-    ],
+    possibleCauses: ['Database error', 'Email already registered', 'Invalid email format'],
     troubleshootingSteps: [
       'Check if email is already registered',
       'Try using a different email address',
@@ -197,7 +194,8 @@ export const AUTH_ERROR_MAP: Record<AuthErrorCode, AuthErrorInfo> = {
   OAuthAccountNotLinked: {
     code: 'OAuthAccountNotLinked',
     title: 'Account Not Linked',
-    userMessage: 'This email is already registered with a different sign-in method. Please use your original sign-in method.',
+    userMessage:
+      'This email is already registered with a different sign-in method. Please use your original sign-in method.',
     technicalMessage: 'Email is already associated with another provider',
     possibleCauses: [
       'Account exists with different OAuth provider',
@@ -252,11 +250,7 @@ export const AUTH_ERROR_MAP: Record<AuthErrorCode, AuthErrorInfo> = {
     title: 'Session Required',
     userMessage: 'You must be signed in to access this page.',
     technicalMessage: 'Protected route accessed without valid session',
-    possibleCauses: [
-      'Session expired',
-      'User logged out',
-      'Never logged in',
-    ],
+    possibleCauses: ['Session expired', 'User logged out', 'Never logged in'],
     troubleshootingSteps: [
       'Sign in to continue',
       'Check if cookies are enabled',
@@ -282,20 +276,18 @@ export const AUTH_ERROR_MAP: Record<AuthErrorCode, AuthErrorInfo> = {
       'Contact support if problem persists',
     ],
   },
-};
+}
 
 /**
  * Get error information from error code
  */
-export function getAuthErrorInfo(
-  code: string | null | undefined
-): AuthErrorInfo {
+export function getAuthErrorInfo(code: string | null | undefined): AuthErrorInfo {
   if (!code) {
-    return AUTH_ERROR_MAP.Default;
+    return AUTH_ERROR_MAP.Default
   }
 
-  const errorCode = code as AuthErrorCode;
-  return AUTH_ERROR_MAP[errorCode] || AUTH_ERROR_MAP.Default;
+  const errorCode = code as AuthErrorCode
+  return AUTH_ERROR_MAP[errorCode] || AUTH_ERROR_MAP.Default
 }
 
 /**
@@ -304,18 +296,18 @@ export function getAuthErrorInfo(
 export function parseAuthError(
   searchParams: URLSearchParams | Record<string, string | string[] | undefined>
 ): AuthErrorInfo | null {
-  let errorCode: string | null = null;
+  let errorCode: string | null = null
 
   if (searchParams instanceof URLSearchParams) {
-    errorCode = searchParams.get('error');
+    errorCode = searchParams.get('error')
   } else if (typeof searchParams === 'object') {
-    const error = searchParams.error;
-    errorCode = Array.isArray(error) ? (error[0] ?? null) : (error ?? null);
+    const error = searchParams.error
+    errorCode = Array.isArray(error) ? (error[0] ?? null) : (error ?? null)
   }
 
   if (!errorCode) {
-    return null;
+    return null
   }
 
-  return getAuthErrorInfo(errorCode);
+  return getAuthErrorInfo(errorCode)
 }
