@@ -140,7 +140,7 @@ function getNextAuth() {
                   } catch (error) {
                     if (env.isDevelopment) {
                       await logInfo('Error refreshing tokens in JWT callback', {
-                        userId: token.id,
+                        userId: token.id as string | undefined,
                         error: error instanceof Error ? error.message : String(error),
                       })
                     }
